@@ -5,7 +5,7 @@ class ProductService {
     this.productRepository = productRepository;
   }
 
-  async listProducts(filter = {}, page = 1, pageSize = 20) {
+  async listProducts(filter = {}, page = 1, pageSize = 10) {
     const where = {};
     console.log('Filter:', filter);
 
@@ -57,11 +57,8 @@ class ProductService {
 
     return {
       data,
-      total,
-      applications,
-      types,
-      page,
-      pageSize: limit,
+      filter_feature:{types,applications},
+      meta:{page,total,pageSize: limit}
     };
   }
 
