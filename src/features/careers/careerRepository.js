@@ -6,8 +6,10 @@ class CareerRepository {
   }
 
   static findById(careerId) {
+    console.log(careerId)
     return CareerModel.findByPk(careerId);
   }
+  
 
   static createCareer(data) {
     return CareerModel.create(data);

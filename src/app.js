@@ -6,11 +6,13 @@ const sequelize     = require('./config/database');
 const errorHandler  = require('./utils/errorHandler');
 const path = require('path');
 const app = express();
-
+const cors          = require('cors');
 // Middleware
-app.use(bodyParser.json());
-app.use(morgan('dev'));
+app.use(bodyParser.json({ limit: '10mb' })); // atur limit lebih besar sesuai kebutuhan
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
+app.use(morgan('dev'));
+app.use(cors()); 
 // Database connect & sync
 sequelize.authenticate()
   .then(() => sequelize.sync({ alter: true }))
