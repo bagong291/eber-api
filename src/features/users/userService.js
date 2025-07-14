@@ -11,8 +11,8 @@ class UserService {
     });
   }
 
-  static listUsers() {
-    return UserRepository.findAll();
+  static listUsers(filter = {}, page = 1, pageSize = 10) {
+    return UserRepository.findAll(filter, page, pageSize);
   }
 
   static getUserById(userId) {

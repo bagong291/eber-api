@@ -2,7 +2,9 @@ const ContactService = require('./contactService');
 
 exports.listContacts = async (req, res, next) => {
   try {
-    const items = await ContactService.listContacts();
+    const { search, page = 1, pageSize, limit, ...filters } = req.query;
+    const effectivePageSize = Number(limit) || Number(pageSize) || 10;
+    const items = await ContactService.listContacts({ search, ...filters }, Number(page), effectivePageSize);
     res.json({status:"success",data:items});
   } catch (error) {
     next(error);

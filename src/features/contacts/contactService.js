@@ -1,8 +1,8 @@
 const ContactRepository = require('./contactRepository');
 
 class ContactService {
-  static listContacts() {
-    return ContactRepository.findAll();
+  static listContacts(filter = {}, page = 1, pageSize = 10) {
+    return ContactRepository.findAll(filter, page, pageSize);
   }
 
   static getContactById(contactId) {

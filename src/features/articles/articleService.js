@@ -2,8 +2,8 @@ const ArticleRepository = require('./articleRepository');
 const FileUpload = require('../../utils/fileUpload');
 
 class ArticleService {
-  static listArticles() {
-    return ArticleRepository.findAll();
+  static listArticles(filter = {}, page = 1, pageSize = 10) {
+    return ArticleRepository.findAll(filter, page, pageSize);
   }
 
   static getArticleById(articleId) {

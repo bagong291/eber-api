@@ -32,6 +32,7 @@ app.use('/api/v1/products', require('./features/products/productRoutes'));
 app.use('/api/v1/auth',     require('./features/users/authRoutes'));
 app.use('/api/v1/users',    require('./features/users/userRoutes'));
 app.use('/api/v1/corporate',    require('./features/company-profile/companyProfileRoutes'));
+app.use('/api/v1/admin-company-profile', require('./features/company-profile/adminCompanyProfileRoutes'));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'))); // akses publik
 app.use('/api/v1/upload',require('./features/upload/uploadRoutes'))
 

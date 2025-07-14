@@ -3,8 +3,8 @@ class CompanyProfileService {
     this.repository = repository;
   }
 
-  async listProfiles() {
-    return this.repository.findAll();
+  async listProfiles(filter = {}, page = 1, pageSize = 10) {
+    return this.repository.findAll(filter, page, pageSize);
   }
 
   async getById(id) {

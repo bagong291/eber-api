@@ -1,8 +1,31 @@
 const HomeModel = require('./Home');
 
 class HomeRepository {
-  static findAll() {
-    return HomeModel.findAll({ order: [['created_at', 'DESC']] });
+  static async findAll(filter = {}, page = 1, pageSize = 10) {
+    const where = {};
+    // Global search (title, content, etc.)
+    if (filter.search) {
+      where['$or'] = [
+        { title: { $like: `%${filter.search}%` } },
+        { content: { $like: `%${filter.search}%` } }
+      ];
+    }
+    // Add other filters
+    Object.keys(filter).forEach(key => {
+      if (key !== 'search') {
+        where[key] = filter[key];
+      }
+    });
+    const limit = Math.min(Number(pageSize) || 10, 100);
+    const offset = (Number(page) - 1) * limit;
+    const [data, total] = await Promise.all([
+      HomeModel.findAll({ where, order: [['created_at', 'DESC']], limit, offset }),
+      HomeModel.count({ where })
+    ]);
+    return {
+      data,
+      meta: { page: Number(page), pageSize: limit, total }
+    };
   }
 
   static findById(homeId) {

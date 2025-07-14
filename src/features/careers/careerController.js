@@ -2,7 +2,9 @@ const CareerService = require('./careerService');
 
 exports.listCareers = async (req, res, next) => {
   try {
-    const items = await CareerService.listCareers();
+    const { search, page = 1, pageSize, limit, ...filters } = req.query;
+    const effectivePageSize = Number(limit) || Number(pageSize) || 10;
+    const items = await CareerService.listCareers({ search, ...filters }, Number(page), effectivePageSize);
     res.json({status:"success",data:items});
   } catch (error) {
     next(error);

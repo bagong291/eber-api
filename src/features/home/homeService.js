@@ -1,8 +1,8 @@
 const HomeRepository = require('./homeRepository');
 
 class HomeService {
-  static listHome() {
-    return HomeRepository.findAll();
+  static listHome(filter = {}, page = 1, pageSize = 10) {
+    return HomeRepository.findAll(filter, page, pageSize);
   }
 
   static getHomeById(homeId) {

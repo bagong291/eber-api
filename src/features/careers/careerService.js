@@ -1,8 +1,8 @@
 const CareerRepository = require('./careerRepository');
 
 class CareerService {
-  static listCareers() {
-    return CareerRepository.findAll();
+  static listCareers(filter = {}, page = 1, pageSize = 10) {
+    return CareerRepository.findAll(filter, page, pageSize);
   }
 
   static getCareerById(careerId) {
