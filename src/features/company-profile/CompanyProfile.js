@@ -32,6 +32,10 @@ CompanyProfile.init({
     data: {
         type: DataTypes.JSONB,
         allowNull: false,
+    },
+    main_image: {
+        type: DataTypes.STRING,
+        allowNull: true,
     }
 }, {
   sequelize,
