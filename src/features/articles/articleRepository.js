@@ -1,13 +1,15 @@
+const { Op } = require('sequelize');
 const ArticleModel = require('./Article');
 
 class ArticleRepository {
   static async findAll(filter = {}, page = 1, pageSize = 10) {
     const where = {};
-    // Global search (title/content)
+    // Global search (title/body/author)
     if (filter.search) {
-      where['$or'] = [
-        { title: { $like: `%${filter.search}%` } },
-        { content: { $like: `%${filter.search}%` } }
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${filter.search}%` } },
+        { body: { [Op.iLike]: `%${filter.search}%` } },
+        { author: { [Op.iLike]: `%${filter.search}%` } }
       ];
     }
     // Add other filters (e.g., author, category, etc.)

@@ -43,6 +43,11 @@ class ProductService {
       }
     }
 
+    // ✅ Filter by status
+    if (filter.status) {
+      where.status = filter.status === 'true' ? true : false;
+    }
+
     const limit = Math.min(pageSize, 100);
     const offset = (page - 1) * limit;
 

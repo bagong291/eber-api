@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const CareerModel = require('./Career');
 
 class CareerRepository {
@@ -5,10 +6,10 @@ class CareerRepository {
     const where = {};
     // Global search (position/location/description)
     if (filter.search) {
-      where['$or'] = [
-        { position: { $like: `%${filter.search}%` } },
-        { location: { $like: `%${filter.search}%` } },
-        { description: { $like: `%${filter.search}%` } }
+      where[Op.or] = [
+        { position: { [Op.iLike]: `%${filter.search}%` } },
+        { location: { [Op.iLike]: `%${filter.search}%` } },
+        { description: { [Op.iLike]: `%${filter.search}%` } }
       ];
     }
     // Add other filters

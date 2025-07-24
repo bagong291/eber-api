@@ -36,6 +36,11 @@ CompanyProfile.init({
     main_image: {
         type: DataTypes.STRING,
         allowNull: true,
+    },
+    status: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
     }
 }, {
   sequelize,

@@ -12,6 +12,10 @@ exports.listProducts = async (req, res, next) => {
       application: req.query.application ? (Array.isArray(req.query.application) ? req.query.application : [req.query.application]) : undefined,
       type: req.query.type ? (Array.isArray(req.query.type) ? req.query.type : [req.query.type]) : undefined,
     }
+    // Only show active products if not authenticated
+    if (!req.user) {
+      filter.status = true;
+    }
     const page = parseInt(req.query.page) || 1
     const pageSize = parseInt(req.query.pageSize) || 10
     const items = await ps.listProducts(filter, page, pageSize);
@@ -25,6 +29,10 @@ exports.getProductById = async (req, res, next) => {
   try {
     const item = await ps.getProductById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Product not found' });
+    // Only allow access to active products if not authenticated
+    if (!req.user && !item.status) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
     res.json(item);
   } catch (error) {
     next(error);

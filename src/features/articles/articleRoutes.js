@@ -1,6 +1,6 @@
 const router             = require('express').Router();
 const articleController  = require('./articleController');
-const { authenticate }   = require('../../middlewares/auth');
+const { authenticate, authenticateOptional }   = require('../../middlewares/auth');
 
 /**
  * @openapi
@@ -8,12 +8,12 @@ const { authenticate }   = require('../../middlewares/auth');
  *   get:
  *     summary: List all articles
  */
-router.get('/', articleController.listArticles);
+router.get('/', authenticateOptional, articleController.listArticles);
 /**
  * @openapi
  * /articles/{id}:
  */
-router.get('/:id', articleController.getArticleById);
+router.get('/:id', authenticateOptional, articleController.getArticleById);
 
 // Admin
 router.post('/', authenticate, articleController.createArticle);

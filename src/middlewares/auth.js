@@ -13,6 +13,22 @@ function authenticate(req, res, next) {
   }
 }
 
+function authenticateOptional(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header) {
+    req.user = null;
+    return next();
+  }
+  const token = header.split(' ')[1];
+  try {
+    req.user = jwt.verify(token, config.jwtSecret);
+    next();
+  } catch {
+    req.user = null;
+    next();
+  }
+}
+
 function authorizeAdmin(req, res, next) {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ status:"failed",message: 'Forbidden' });
@@ -20,4 +36,4 @@ function authorizeAdmin(req, res, next) {
   next();
 }
 
-module.exports = { authenticate, authorizeAdmin };
+module.exports = { authenticate, authenticateOptional, authorizeAdmin };

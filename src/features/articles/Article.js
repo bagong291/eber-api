@@ -8,7 +8,8 @@ Article.init({
   group: { type: DataTypes.STRING, allowNull: true },
   image: { type: DataTypes.STRING, allowNull: true },
   pdf:   { type: DataTypes.STRING, allowNull: true },
-  author:{ type: DataTypes.STRING }
+  author:{ type: DataTypes.STRING },
+  status: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
 }, {
   sequelize,
   modelName: 'Article',

@@ -1,6 +1,6 @@
 const router             = require('express').Router();
 const productController  = require('./productController');
-const { authenticate }   = require('../../middlewares/auth');
+const { authenticate, authenticateOptional }   = require('../../middlewares/auth');
 
 /**
  * @openapi
@@ -8,12 +8,12 @@ const { authenticate }   = require('../../middlewares/auth');
  *   get:
  *     summary: List products
  */
-router.get('/', productController.listProducts);
+router.get('/', authenticateOptional, productController.listProducts);
 /**
  * @openapi
  * /products/{id}:
  */
-router.get('/:id', productController.getProductById);
+router.get('/:id', authenticateOptional, productController.getProductById);
 
 // Admin
 router.post('/', authenticate, productController.createProduct);

@@ -1,6 +1,6 @@
 const router             = require('express').Router();
 const careerController   = require('./careerController');
-const { authenticate }   = require('../../middlewares/auth');
+const { authenticate, authenticateOptional }   = require('../../middlewares/auth');
 
 /**
  * @openapi
@@ -8,12 +8,12 @@ const { authenticate }   = require('../../middlewares/auth');
  *   get:
  *     summary: List careers
  */
-router.get('/', careerController.listCareers);
+router.get('/', authenticateOptional, careerController.listCareers);
 /**
  * @openapi
  * /careers/{id}:
  */
-router.get('/:id', careerController.getCareerById);
+router.get('/:id', authenticateOptional, careerController.getCareerById);
 
 // Admin
 router.post('/', authenticate, careerController.createCareer);

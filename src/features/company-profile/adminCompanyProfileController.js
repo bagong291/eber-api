@@ -7,6 +7,10 @@ exports.list = async (req, res, next) => {
   try {
     const { search, page = 1, pageSize, limit, ...filters } = req.query;
     const effectivePageSize = Number(limit) || Number(pageSize) || 10;
+    // Only show active profiles if not authenticated
+    if (!req.user) {
+      filters.status = true;
+    }
     const items = await service.listProfiles({ search, ...filters }, Number(page), effectivePageSize);
     res.json({ status: 'success', data: items });
   } catch (error) {
@@ -17,6 +21,10 @@ exports.list = async (req, res, next) => {
 exports.get = async (req, res, next) => {
   try {
     const item = await service.getById(req.params.id);
+    // Only allow access to active profiles if not authenticated
+    if (!req.user && !item.status) {
+      return res.status(404).json({ message: 'Company profile not found' });
+    }
     res.json({ status: 'success', data: item });
   } catch (error) {
     next(error);

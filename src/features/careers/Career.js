@@ -6,7 +6,8 @@ Career.init({
   position:    { type: DataTypes.STRING, allowNull: false },
   type:    { type: DataTypes.STRING, allowNull: false },
   location:    { type: DataTypes.STRING, allowNull: false },
-  description: { type: DataTypes.TEXT,   allowNull: false }
+  description: { type: DataTypes.TEXT,   allowNull: false },
+  status:      { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
 }, {
   sequelize,
   modelName: 'Career',
