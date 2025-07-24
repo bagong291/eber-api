@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: company-profile-api
+    restart: unless-stopped
+    ports:
+      - "3022:3022"
+    environment:
+      - NODE_ENV=production
+      - PORT=3022
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=company_profile
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=your_jwt_secret_key_here
+    depends_on:
+      - db
+    volumes:
+      - ./uploads:/app/uploads
+      - /app/node_modules
+    networks:
+      - app-network
+    # Wait for PostgreSQL to be ready before starting the app
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').connect({host: 'db', port: 5432}, () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: company-profile-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=company_profile
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (Optional, uncomment if needed)
+  # pgadmin:
+  #   container_name: pgadmin
+  #   image: dpage/pgadmin4
+  #   restart: unless-stopped
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@example.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - app-network
+
+# Networks
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  postgres_data:

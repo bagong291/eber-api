@@ -20,8 +20,15 @@ sequelize.authenticate()
   .catch(err => console.error('❌ DB error:', err));
 
 // Swagger UI
-const swaggerDocument = require('../docs/swagger-output.json');
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const swaggerDocument = require('./config/swagger-docs');
+app.use('/api-docs', 
+  swaggerUi.serve, 
+  swaggerUi.setup(swaggerDocument, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Company Profile API Documentation'
+  })
+);
 
 // Feature routes
 app.use('/api/v1/home',     require('./features/home/homeRoutes'));

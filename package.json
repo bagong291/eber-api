@@ -2,9 +2,11 @@
   "name": "company-profile-api",
   "version": "1.0.0",
   "scripts": {
-    "generate-docs": "node swagger.js",
+    "generate-docs": "node swagger-config.js",
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "swagger": "node swagger-config.js && node swagger.js",
+    "seed": "node src/seeders/run-seeders.js"
   },
   "dependencies": {
     "axios": "^1.10.0",
@@ -21,10 +23,11 @@
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.32.1",
-    "swagger-autogen": "^2.23.5",
-    "swagger-ui-express": "^4.6.2"
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.3"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "swagger-autogen": "^2.23.7"
   }
 }
