@@ -4,12 +4,14 @@ const CareerModel = require('./Career');
 class CareerRepository {
   static async findAll(filter = {}, page = 1, pageSize = 10) {
     const where = {};
-    // Global search (position/location/description)
+    // Global search (position/location/description with multi-language support)
     if (filter.search) {
       where[Op.or] = [
         { position: { [Op.iLike]: `%${filter.search}%` } },
         { location: { [Op.iLike]: `%${filter.search}%` } },
-        { description: { [Op.iLike]: `%${filter.search}%` } }
+        { description: { [Op.iLike]: `%${filter.search}%` } },
+        { description_en: { [Op.iLike]: `%${filter.search}%` } },
+        { description_id: { [Op.iLike]: `%${filter.search}%` } }
       ];
     }
     // Add other filters

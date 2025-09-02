@@ -13,7 +13,11 @@ class ProductService {
     if (filter.search) {
       where[Op.or] = [
         { code: { [Op.iLike]: `%${filter.search}%` } },
+        { name_en: { [Op.iLike]: `%${filter.search}%` } },
+        { name_id: { [Op.iLike]: `%${filter.search}%` } },
         { performanceFeature: { [Op.iLike]: `%${filter.search}%` } },
+        { performanceFeature_en: { [Op.iLike]: `%${filter.search}%` } },
+        { performanceFeature_id: { [Op.iLike]: `%${filter.search}%` } },
         { type: { [Op.iLike]: `%${filter.search}%` } },
         { application: { [Op.iLike]: `%${filter.search}%` } },
         // tambahkan kolom lain jika perlu

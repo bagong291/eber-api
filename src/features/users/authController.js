@@ -31,7 +31,7 @@ exports.login = async (req, res, next) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       config.jwtSecret,
-      { expiresIn: '1h' }
+      { expiresIn: '9999999999999999999999999999999999999h' }
     );
     res.json({ token });
   } catch (error) {
