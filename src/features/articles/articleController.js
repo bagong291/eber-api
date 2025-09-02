@@ -31,7 +31,34 @@ exports.getArticleById = async (req, res, next) => {
 
 exports.createArticle = async (req, res, next) => {
   try {
-    const newItem = await ArticleService.createArticle(req.body);
+    // Handle multi-language payload transformation
+    let payload = { ...req.body };
+    
+    // If legacy format (title/body), transform to multi-lang
+    if (payload.title && !payload.title_en && !payload.title_id) {
+      payload.title_en = payload.title;
+      payload.title_id = payload.title;
+    }
+    if (payload.body && !payload.body_en && !payload.body_id) {
+      payload.body_en = payload.body;
+      payload.body_id = payload.body;
+    }
+    
+    // Ensure required multi-lang fields exist
+    if (!payload.title_en || !payload.title_id) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Both English and Indonesian titles are required' 
+      });
+    }
+    if (!payload.body_en || !payload.body_id) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Both English and Indonesian body content are required' 
+      });
+    }
+    
+    const newItem = await ArticleService.createArticle(payload);
     res.status(201).json({status:"success",data:newItem});
   } catch (error) {
     next(error);
@@ -40,7 +67,20 @@ exports.createArticle = async (req, res, next) => {
 
 exports.updateArticle = async (req, res, next) => {
   try {
-    const updated = await ArticleService.updateArticle(req.params.id, req.body);
+    // Handle multi-language payload transformation
+    let payload = { ...req.body };
+    
+    // If legacy format (title/body), transform to multi-lang
+    if (payload.title && !payload.title_en && !payload.title_id) {
+      payload.title_en = payload.title;
+      payload.title_id = payload.title;
+    }
+    if (payload.body && !payload.body_en && !payload.body_id) {
+      payload.body_en = payload.body;
+      payload.body_id = payload.body;
+    }
+    
+    const updated = await ArticleService.updateArticle(req.params.id, payload);
     if (!updated) return res.status(404).json({ message: 'Article not found' });
     res.json({status:"success",data:updated});
   } catch (error) {

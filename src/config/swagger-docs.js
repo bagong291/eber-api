@@ -18,12 +18,12 @@ const options = {
     },
     servers: [
       {
-        url: process.env.BACKEND_URL,
+        url: 'http://localhost:3022/api/v1',
         description: 'Development server'
       },
       {
         url: 'http://localhost:3022/api/v1',
-        description: 'Local server'
+        description: 'Development server'
       },
       {
         url: 'https://api.example.com/v1',

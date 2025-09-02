@@ -35,7 +35,24 @@ exports.getCareerById = async (req, res, next) => {
 
 exports.createCareer = async (req, res, next) => {
   try {
-    const newItem = await CareerService.createCareer(req.body);
+    // Handle multi-language payload transformation
+    let payload = { ...req.body };
+    
+    // If legacy format (description), transform to multi-lang
+    if (payload.description && !payload.description_en && !payload.description_id) {
+      payload.description_en = payload.description;
+      payload.description_id = payload.description;
+    }
+    
+    // Ensure required multi-lang fields exist
+    if (!payload.description_en || !payload.description_id) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Both English and Indonesian job descriptions are required' 
+      });
+    }
+    
+    const newItem = await CareerService.createCareer(payload);
     res.status(201).json({status:"success",data:newItem});
   } catch (error) {
     next(error);
@@ -44,7 +61,16 @@ exports.createCareer = async (req, res, next) => {
 
 exports.updateCareer = async (req, res, next) => {
   try {
-    const updated = await CareerService.updateCareer(req.params.id, req.body);
+    // Handle multi-language payload transformation
+    let payload = { ...req.body };
+    
+    // If legacy format (description), transform to multi-lang
+    if (payload.description && !payload.description_en && !payload.description_id) {
+      payload.description_en = payload.description;
+      payload.description_id = payload.description;
+    }
+    
+    const updated = await CareerService.updateCareer(req.params.id, payload);
     if (!updated) return res.status(404).json({ message: 'Career not found' });
     res.json({status:"success",data:updated});
   } catch (error) {

@@ -24,10 +24,19 @@ CompanyProfile.init({
       allowNull: false,
       unique: true,
     },
-    description: {
+    // Multi-language main description
+    description_en: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+    },
+    description_id: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    // Legacy field (for backward compatibility)
+    description: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     data: {
         type: DataTypes.JSONB,

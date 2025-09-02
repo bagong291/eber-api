@@ -33,7 +33,51 @@ exports.get = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const item = await service.create(req.body);
+    // Handle multi-language payload transformation
+    let payload = { ...req.body };
+    
+    // Transform main description field
+    if (payload.description && !payload.description_en && !payload.description_id) {
+      payload.description_en = payload.description;
+      payload.description_id = payload.description;
+    }
+    
+    // Transform nested data fields for multi-language
+    if (payload.data) {
+      const data = { ...payload.data };
+      
+      // Handle Product Application (p)
+      if (data.p) {
+        if (data.p.title && !data.p.title_en && !data.p.title_id) {
+          data.p.title_en = data.p.title;
+          data.p.title_id = data.p.title;
+        }
+        if (data.p.description && !data.p.description_en && !data.p.description_id) {
+          data.p.description_en = data.p.description;
+          data.p.description_id = data.p.description;
+        }
+      }
+      
+      // Handle titles and descriptions
+      ['title_1', 'title_2', 'title_3', 'description_1', 'description_2', 'description_3'].forEach(field => {
+        if (data[field] && !data[`${field}_en`] && !data[`${field}_id`]) {
+          data[`${field}_en`] = data[field];
+          data[`${field}_id`] = data[field];
+        }
+      });
+      
+      payload.data = data;
+    }
+    
+    // Validate required multi-lang fields
+    if (!payload.description_en || !payload.description_id) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Both English and Indonesian descriptions are required' 
+      });
+    }
+    
+    const item = await service.create(payload);
     res.status(201).json({ status: 'success', data: item });
   } catch (error) {
     next(error);
@@ -42,7 +86,43 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    const updated = await service.update(req.params.id, req.body);
+    // Handle multi-language payload transformation
+    let payload = { ...req.body };
+    
+    // Transform main description field
+    if (payload.description && !payload.description_en && !payload.description_id) {
+      payload.description_en = payload.description;
+      payload.description_id = payload.description;
+    }
+    
+    // Transform nested data fields for multi-language
+    if (payload.data) {
+      const data = { ...payload.data };
+      
+      // Handle Product Application (p)
+      if (data.p) {
+        if (data.p.title && !data.p.title_en && !data.p.title_id) {
+          data.p.title_en = data.p.title;
+          data.p.title_id = data.p.title;
+        }
+        if (data.p.description && !data.p.description_en && !data.p.description_id) {
+          data.p.description_en = data.p.description;
+          data.p.description_id = data.p.description;
+        }
+      }
+      
+      // Handle titles and descriptions
+      ['title_1', 'title_2', 'title_3', 'description_1', 'description_2', 'description_3'].forEach(field => {
+        if (data[field] && !data[`${field}_en`] && !data[`${field}_id`]) {
+          data[`${field}_en`] = data[field];
+          data[`${field}_id`] = data[field];
+        }
+      });
+      
+      payload.data = data;
+    }
+    
+    const updated = await service.update(req.params.id, payload);
     res.json({ status: 'success', data: updated });
   } catch (error) {
     next(error);
