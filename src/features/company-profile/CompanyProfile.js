@@ -19,10 +19,19 @@ CompanyProfile.init({
       allowNull: false,
       unique: true,
     },
+    // Multi-language address
+    address_en: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    address_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    // Legacy field (for backward compatibility)
     address: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+      allowNull: true,
     },
     // Multi-language main description
     description_en: {
