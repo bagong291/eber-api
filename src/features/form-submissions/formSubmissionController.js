@@ -30,7 +30,9 @@ class FormSubmissionController {
         data: {
           id: result.submission.id,
           emailSent: result.emailSent,
-          message: 'We\'ve sent you an email with direct access to our complete product catalog.'
+          message: 'We\'ve sent you an email with direct access to our complete product catalog.',
+          productUrl: result.productUrl,
+          encodedData: result.encodedData
         }
       };
 

@@ -49,7 +49,31 @@ POST /api/v1/form-submissions/instant-access
 The API automatically sends two emails:
 
 1. **Admin Notification**: Alerts administrators about new instant access requests
-2. **User Response**: Sends the user immediate access to the product catalog with a direct link
+2. **User Response**: Sends the user immediate access to the product catalog with a **personalized link**
+
+### 🔗 Personalized Links with Base64 Encoding
+The product catalog links sent to users contain their information encoded in base64 format:
+
+**Link Format:**
+```
+https://yourcompany.com/products?access=eyJuYW1lIjoiSm9obiBEb2UiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJ0aW1lc3RhbXAiOiIyMDI0LTEyLTAzVDEwOjAwOjAwLjAwMFoifQ==
+```
+
+**Decoded Data Structure:**
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com", 
+  "timestamp": "2024-12-03T10:00:00.000Z"
+}
+```
+
+**Benefits:**
+- **Personalized Experience**: Greet users by name on the product page
+- **Access Tracking**: Know who accessed your catalog and when
+- **Lead Analytics**: Track user behavior with contact information
+- **Quote Pre-filling**: Auto-fill contact forms for easier conversions
+- **Link Validation**: Optional expiration checking
 
 ## Setup Requirements
 
@@ -88,7 +112,87 @@ Run the migration to add support for the instant access form:
 
 ## Frontend Integration
 
-### HTML Form Example
+### 🔓 Decoding User Data from Links
+
+**JavaScript Decoder (Browser):**
+```javascript
+function decodeUserData(encodedData) {
+  try {
+    const jsonString = atob(encodedData); // Browser base64 decode
+    const userData = JSON.parse(jsonString);
+    return userData;
+  } catch (error) {
+    console.error('Failed to decode user data:', error);
+    return null;
+  }
+}
+
+// Get user data from current URL
+function getUserFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const accessParam = params.get('access');
+  return accessParam ? decodeUserData(accessParam) : null;
+}
+
+// Use in your product page
+const userData = getUserFromUrl();
+if (userData) {
+  document.getElementById('welcome').textContent = `Welcome, ${userData.name}!`;
+  console.log('User email:', userData.email);
+  console.log('Access requested:', userData.timestamp);
+}
+```
+
+**Node.js Decoder (Backend):**
+```javascript
+const LinkDecoder = require('./src/utils/linkDecoder');
+
+// Decode from URL parameter
+const userData = LinkDecoder.decodeUserData(encodedString);
+
+// Extract from full URL
+const accessParam = LinkDecoder.extractAccessParam(fullUrl);
+const userData = LinkDecoder.decodeUserData(accessParam);
+
+// Create personalized greeting
+const greeting = LinkDecoder.createGreeting(userData);
+// Returns: "Good morning, John Doe! Welcome to our product catalog."
+```
+
+### 🎨 Personalized Product Page Example
+```html
+<!-- Welcome Banner -->
+<div id="welcomeBanner" class="welcome-banner" style="display: none;">
+  <h2 id="welcomeMessage">Welcome!</h2>
+  <p>Thank you for requesting access to our products.</p>
+</div>
+
+<script>
+// Check for personalized access
+const userData = getUserFromUrl();
+if (userData) {
+  // Show personalized content
+  document.getElementById('welcomeBanner').style.display = 'block';
+  document.getElementById('welcomeMessage').textContent = 
+    `Welcome, ${userData.name}!`;
+  
+  // Pre-fill contact forms
+  document.getElementById('contactName').value = userData.name;
+  document.getElementById('contactEmail').value = userData.email;
+  
+  // Track access for analytics
+  fetch('/api/v1/analytics/product-access', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: userData.name,
+      email: userData.email,
+      accessedAt: new Date().toISOString()
+    })
+  });
+}
+</script>
+```
 ```html
 <form id="instantAccessForm">
   <input type="text" name="fullName" placeholder="Full name (required)" required>

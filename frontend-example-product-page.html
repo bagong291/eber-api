@@ -1,0 +1,255 @@
+<!-- 
+  Example Frontend Implementation for Product Catalog Page
+  This shows how to handle the personalized links with base64 encoded user data
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog - Your Company</title>
+    <style>
+        .welcome-banner {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .product-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="welcomeBanner" class="welcome-banner" style="display: none;">
+            <h2 id="welcomeMessage">Welcome to our Product Catalog!</h2>
+            <p>Thank you for your interest in our products.</p>
+        </div>
+
+        <div id="userInfo" class="user-info" style="display: none;">
+            <h4>🎯 Personalized Access</h4>
+            <p id="userDetails">Loading user information...</p>
+            <small id="accessTime" class="text-muted"></small>
+        </div>
+
+        <h1>Our Product Catalog</h1>
+        
+        <div class="products-grid">
+            <!-- Your existing product cards here -->
+            <div class="product-card">
+                <h3>Product 1</h3>
+                <p>Product description...</p>
+                <button class="btn btn-primary" onclick="requestQuote('Product 1')">Request Quote</button>
+            </div>
+            <!-- More products... -->
+        </div>
+    </div>
+
+    <script>
+        // Link Decoder Utility (simplified for frontend)
+        class LinkDecoder {
+            static decodeUserData(encodedData) {
+                try {
+                    if (!encodedData) return null;
+                    const jsonString = atob(encodedData); // Browser's base64 decode
+                    const userData = JSON.parse(jsonString);
+                    
+                    if (!userData.name || !userData.email || !userData.timestamp) {
+                        return null;
+                    }
+                    
+                    userData.accessedAt = new Date().toISOString();
+                    return userData;
+                } catch (error) {
+                    console.error('Failed to decode user data:', error);
+                    return null;
+                }
+            }
+
+            static extractAccessParam(url = window.location.href) {
+                const urlObj = new URL(url);
+                return urlObj.searchParams.get('access');
+            }
+
+            static getUserFromCurrentUrl() {
+                const accessParam = this.extractAccessParam();
+                return accessParam ? this.decodeUserData(accessParam) : null;
+            }
+
+            static createGreeting(userData) {
+                if (!userData || !userData.name) {
+                    return 'Welcome to our product catalog!';
+                }
+
+                const timeOfDay = new Date().getHours();
+                let greeting = 'Hello';
+                
+                if (timeOfDay < 12) greeting = 'Good morning';
+                else if (timeOfDay < 17) greeting = 'Good afternoon';
+                else greeting = 'Good evening';
+
+                return `${greeting}, ${userData.name}! Welcome to our product catalog.`;
+            }
+
+            static isLinkValid(userData, validHours = 720) { // 30 days default
+                if (!userData || !userData.timestamp) return false;
+                
+                const linkTime = new Date(userData.timestamp);
+                const now = new Date();
+                const hoursDiff = (now - linkTime) / (1000 * 60 * 60);
+                
+                return hoursDiff <= validHours;
+            }
+        }
+
+        // Initialize page when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = LinkDecoder.getUserFromCurrentUrl();
+            
+            if (userData) {
+                // Personalized experience
+                setupPersonalizedExperience(userData);
+                
+                // Log access for analytics
+                logUserAccess(userData);
+            } else {
+                // General public access
+                setupGeneralExperience();
+            }
+        });
+
+        function setupPersonalizedExperience(userData) {
+            // Show welcome banner
+            const welcomeBanner = document.getElementById('welcomeBanner');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const userInfo = document.getElementById('userInfo');
+            const userDetails = document.getElementById('userDetails');
+            const accessTime = document.getElementById('accessTime');
+
+            welcomeBanner.style.display = 'block';
+            welcomeMessage.textContent = LinkDecoder.createGreeting(userData);
+
+            // Show user info
+            userInfo.style.display = 'block';
+            userDetails.innerHTML = `
+                <strong>Name:</strong> ${userData.name}<br>
+                <strong>Email:</strong> ${userData.email}
+            `;
+            
+            const requestTime = new Date(userData.timestamp).toLocaleString();
+            accessTime.textContent = `Access requested on: ${requestTime}`;
+
+            // Check if link is still valid
+            if (!LinkDecoder.isLinkValid(userData)) {
+                userInfo.style.borderLeftColor = '#ffc107';
+                userInfo.innerHTML += '<p style="color: #856404; margin-top: 10px;"><strong>Note:</strong> This access link has expired. Please request new access if needed.</p>';
+            }
+
+            // Update page title
+            document.title = `Product Catalog - Welcome ${userData.name}`;
+        }
+
+        function setupGeneralExperience() {
+            // Standard experience for general visitors
+            console.log('General visitor access');
+        }
+
+        function logUserAccess(userData) {
+            // Log to your analytics
+            const accessLog = {
+                name: userData.name,
+                email: userData.email,
+                originalTimestamp: userData.timestamp,
+                accessedAt: new Date().toISOString(),
+                page: window.location.pathname,
+                userAgent: navigator.userAgent,
+                referrer: document.referrer
+            };
+
+            console.log('Product catalog access:', accessLog);
+
+            // Send to your analytics endpoint (optional)
+            fetch('/api/v1/analytics/product-access', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(accessLog)
+            }).catch(error => {
+                console.warn('Analytics logging failed:', error);
+            });
+        }
+
+        function requestQuote(productName) {
+            const userData = LinkDecoder.getUserFromCurrentUrl();
+            
+            if (userData) {
+                // Pre-fill quote form with user data
+                const message = `I'm interested in ${productName}. Please send me a quote.`;
+                const subject = `Quote Request for ${productName}`;
+                
+                // Redirect to contact form with pre-filled data
+                const params = new URLSearchParams({
+                    name: userData.name,
+                    email: userData.email,
+                    subject: subject,
+                    message: message,
+                    product: productName
+                });
+                
+                window.location.href = `/contact?${params.toString()}`;
+            } else {
+                // Regular quote request flow
+                window.location.href = `/contact?product=${encodeURIComponent(productName)}`;
+            }
+        }
+
+        // Example: Track product views with user context
+        function trackProductView(productId, productName) {
+            const userData = LinkDecoder.getUserFromCurrentUrl();
+            
+            const trackingData = {
+                productId: productId,
+                productName: productName,
+                timestamp: new Date().toISOString(),
+                user: userData ? {
+                    name: userData.name,
+                    email: userData.email,
+                    accessType: 'instant_access'
+                } : {
+                    accessType: 'public'
+                }
+            };
+
+            // Send to analytics
+            fetch('/api/v1/analytics/product-view', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(trackingData)
+            }).catch(console.warn);
+        }
+    </script>
+</body>
+</html>

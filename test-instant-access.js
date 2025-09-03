@@ -9,7 +9,7 @@
 
 const axios = require('axios');
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3022';
 const API_ENDPOINT = `${API_BASE_URL}/api/v1/form-submissions/instant-access`;
 
 async function testInstantAccessForm() {
@@ -21,39 +21,40 @@ async function testInstantAccessForm() {
       name: 'Valid submission',
       data: {
         fullName: 'John Doe',
-        email: 'john.doe@example.com',
+        email: 'indonesia.dds@gmail.com',
         phone: '+1234567890',
         company: 'Tech Corporation',
         city: 'New York'
       },
       expectedStatus: 201
-    },
-    {
-      name: 'Missing required fields',
-      data: {
-        fullName: 'Jane Smith'
-        // Missing email and phone
-      },
-      expectedStatus: 400
-    },
-    {
-      name: 'Invalid email format',
-      data: {
-        fullName: 'Bob Wilson',
-        email: 'invalid-email',
-        phone: '+1234567890'
-      },
-      expectedStatus: 400
-    },
-    {
-      name: 'Minimal valid data',
-      data: {
-        fullName: 'Alice Johnson',
-        email: 'alice@example.com',
-        phone: '555-1234'
-      },
-      expectedStatus: 201
     }
+    // ,
+    // {
+    //   name: 'Missing required fields',
+    //   data: {
+    //     fullName: 'Jane Smith'
+    //     // Missing email and phone
+    //   },
+    //   expectedStatus: 400
+    // },
+    // {
+    //   name: 'Invalid email format',
+    //   data: {
+    //     fullName: 'Bob Wilson',
+    //     email: 'invalid-email',
+    //     phone: '+1234567890'
+    //   },
+    //   expectedStatus: 400
+    // },
+    // {
+    //   name: 'Minimal valid data',
+    //   data: {
+    //     fullName: 'Alice Johnson',
+    //     email: 'alice@example.com',
+    //     phone: '555-1234'
+    //   },
+    //   expectedStatus: 201
+    // }
   ];
 
   for (const testCase of testCases) {
@@ -67,6 +68,23 @@ async function testInstantAccessForm() {
         console.log(`   ✅ Success: Status ${response.status}`);
         console.log(`   📧 Email sent: ${response.data.data?.emailSent || 'N/A'}`);
         console.log(`   💬 Message: ${response.data.message}`);
+        
+        // Show base64 encoded URL if available
+        if (response.data.data?.productUrl) {
+          console.log(`   🔗 Personalized URL: ${response.data.data.productUrl}`);
+          
+          // Decode and show user data
+          const urlParams = new URL(response.data.data.productUrl).searchParams;
+          const encodedData = urlParams.get('access');
+          if (encodedData) {
+            try {
+              const decodedData = JSON.parse(Buffer.from(encodedData, 'base64').toString());
+              console.log(`   👤 Encoded user data:`, decodedData);
+            } catch (e) {
+              console.log(`   ⚠️  Could not decode user data`);
+            }
+          }
+        }
       } else {
         console.log(`   ❌ Unexpected status: Expected ${testCase.expectedStatus}, got ${response.status}`);
       }

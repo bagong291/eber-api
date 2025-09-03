@@ -148,7 +148,15 @@ class EmailService {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@company.com';
     const companyName = process.env.COMPANY_NAME || 'Your Company';
     const websiteUrl = process.env.WEBSITE_URL || 'https://yourcompany.com';
-    const productListUrl = `${websiteUrl}/products`;
+    
+    // Create base64 encoded user data for the product link
+    const userData = {
+      name: fullName,
+      email: email,
+      timestamp: new Date().toISOString()
+    };
+    const encodedUserData = Buffer.from(JSON.stringify(userData)).toString('base64');
+    const productListUrl = `${websiteUrl}/products?access=${encodedUserData}`;
 
     // Email to admin
     const adminMailOptions = {
@@ -175,6 +183,9 @@ class EmailService {
             <p style="margin: 0; color: #856404;">
               <strong>User is requesting instant access to the product catalog.</strong>
             </p>
+            <p style="font-size: 14px; color: #856404; margin-top: 10px;">
+              Personalized link sent: <a href="${productListUrl}" style="color: #007bff;">${productListUrl}</a>
+            </p>
           </div>
           
           <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -186,7 +197,7 @@ class EmailService {
       `
     };
 
-    // Auto-response email to user with product list link
+    // Auto-response email to user with personalized product list link
     const userMailOptions = {
       from: `"${companyName}" <${process.env.SMTP_USER}>`,
       to: email,
@@ -203,13 +214,16 @@ class EmailService {
           
           <div style="background: #d4edda; padding: 20px; border-radius: 5px; margin: 20px 0; border: 1px solid #c3e6cb;">
             <h3 style="color: #155724; margin-top: 0;">🎉 Access Granted!</h3>
-            <p style="color: #155724; margin-bottom: 15px;">Your instant access to our product catalog is ready. Click the button below to explore our full range:</p>
+            <p style="color: #155724; margin-bottom: 15px;">Your personalized instant access to our product catalog is ready. Click the button below to explore our full range:</p>
             <div style="text-align: center; margin: 20px 0;">
               <a href="${productListUrl}" 
                  style="background: #28a745; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">
                 🛍️ View Product Catalog
               </a>
             </div>
+            <p style="font-size: 12px; color: #155724; text-align: center; margin: 0;">
+              This link is personalized for you and tracks your access for better service.
+            </p>
           </div>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
@@ -236,7 +250,7 @@ class EmailService {
             The ${companyName} Team</p>
             
             <p style="font-size: 12px; color: #999;">
-              Direct link to products: <a href="${productListUrl}" style="color: #007bff;">${productListUrl}</a>
+              Your personalized link: <a href="${productListUrl}" style="color: #007bff; word-break: break-all;">${productListUrl}</a>
             </p>
           </div>
         </div>
@@ -250,11 +264,13 @@ class EmailService {
       
       console.log('Admin instant access notification sent:', adminResult.messageId);
       console.log('User instant access response sent:', userResult.messageId);
-      
+      console.log(email)
       return {
         success: true,
         adminMessageId: adminResult.messageId,
-        userMessageId: userResult.messageId
+        userMessageId: userResult.messageId,
+        productUrl: productListUrl,
+        encodedData: encodedUserData
       };
     } catch (error) {
       console.error('Failed to send instant access emails:', error);

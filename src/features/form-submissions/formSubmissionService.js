@@ -250,7 +250,9 @@ class FormSubmissionService {
         success: true,
         submission,
         emailSent: emailResult ? emailResult.success : false,
-        emailError: emailResult && !emailResult.success ? emailResult.error : null
+        emailError: emailResult && !emailResult.success ? emailResult.error : null,
+        productUrl: emailResult && emailResult.productUrl ? emailResult.productUrl : null,
+        encodedData: emailResult && emailResult.encodedData ? emailResult.encodedData : null
       };
     } catch (error) {
       console.error('Instant access form submission failed:', error);
