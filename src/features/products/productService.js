@@ -9,18 +9,17 @@ class ProductService {
     const where = {};
     console.log('Filter:', filter);
 
-    // 🔍 Global search by `code`, `name`, etc.
+    // 🔍 Global search by `code`, `application`, etc.
     if (filter.search) {
       where[Op.or] = [
         { code: { [Op.iLike]: `%${filter.search}%` } },
-        { name_en: { [Op.iLike]: `%${filter.search}%` } },
-        { name_id: { [Op.iLike]: `%${filter.search}%` } },
-        { performanceFeature: { [Op.iLike]: `%${filter.search}%` } },
+        { application_en: { [Op.iLike]: `%${filter.search}%` } },
+        { application_id: { [Op.iLike]: `%${filter.search}%` } },
+        { application: { [Op.iLike]: `%${filter.search}%` } }, // Legacy field
+        { performanceFeature: { [Op.iLike]: `%${filter.search}%` } }, // Legacy field
         { performanceFeature_en: { [Op.iLike]: `%${filter.search}%` } },
         { performanceFeature_id: { [Op.iLike]: `%${filter.search}%` } },
         { type: { [Op.iLike]: `%${filter.search}%` } },
-        { application: { [Op.iLike]: `%${filter.search}%` } },
-        // tambahkan kolom lain jika perlu
       ];
     }
 
@@ -29,12 +28,18 @@ class ProductService {
       where.code = { [Op.iLike]: `%${filter.code}%` };
     }
 
-    // ✅ Filter by application with support for array (IN)
+    // ✅ Filter by application with support for array (IN) - check both multilingual and legacy fields
     if (filter.application) {
       if (Array.isArray(filter.application)) {
-        where.application = { [Op.in]: filter.application };
+        where[Op.or] = [
+          { application_en: { [Op.in]: filter.application } },
+          { application: { [Op.in]: filter.application } } // Legacy field
+        ];
       } else {
-        where.application = { [Op.iLike]: `%${filter.application}%` };
+        where[Op.or] = [
+          { application_en: { [Op.iLike]: `%${filter.application}%` } },
+          { application: { [Op.iLike]: `%${filter.application}%` } } // Legacy field
+        ];
       }
     }
 

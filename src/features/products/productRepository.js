@@ -36,13 +36,23 @@ class ProductRepository {
   }
 
   async findDistinctApplication() {
-    const result = await ProductModel.findAll({
-      attributes: [[fn('DISTINCT', col('application')), 'application']],
-      where: { application: { [Op.ne]: null } },
-      raw: true,
-    });
+    // Get applications from both English and legacy fields
+    const [enResults, legacyResults] = await Promise.all([
+      ProductModel.findAll({
+        attributes: [[fn('DISTINCT', col('application_en')), 'application']],
+        where: { application_en: { [Op.ne]: null } },
+        raw: true,
+      }),
+      ProductModel.findAll({
+        attributes: [[fn('DISTINCT', col('application')), 'application']],
+        where: { application: { [Op.ne]: null } },
+        raw: true,
+      })
+    ]);
 
-    return result.map(item => item.application);
+    // Combine and deduplicate results
+    const allApps = [...enResults, ...legacyResults].map(item => item.application);
+    return [...new Set(allApps.filter(app => app && app.trim()))];
   }
 
   async createProduct(data) {
