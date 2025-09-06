@@ -9,8 +9,18 @@ exports.listProducts = async (req, res, next) => {
     const filter = {
       search: req.query.search,
       code: req.query.code,
-      application: req.query.application ? (Array.isArray(req.query.application) ? req.query.application : [req.query.application]) : undefined,
-      type: req.query.type ? (Array.isArray(req.query.type) ? req.query.type : [req.query.type]) : undefined,
+      // Handle comma-separated values for arrays
+      application: req.query.application ? 
+        (typeof req.query.application === 'string' ? 
+          req.query.application.split(',').map(s => s.trim()).filter(Boolean) : 
+          (Array.isArray(req.query.application) ? req.query.application : [req.query.application])
+        ) : undefined,
+      type: req.query.type ? 
+        (typeof req.query.type === 'string' ? 
+          req.query.type.split(',').map(s => s.trim()).filter(Boolean) : 
+          (Array.isArray(req.query.type) ? req.query.type : [req.query.type])
+        ) : undefined,
+      status: req.query.status
     }
     // Only show active products if not authenticated
     if (!req.user) {
