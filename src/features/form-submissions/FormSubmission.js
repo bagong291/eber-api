@@ -67,16 +67,24 @@ FormSubmission.init({
       len: { args: [10, 2000], msg: 'Message must be between 10-2000 characters' }
     }
   },
+  productCode: {
+    field: 'product_code',
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: { args: [0, 100], msg: 'Product code must be less than 100 characters' }
+    }
+  },
   formType: {
     field: 'form_type',
-    type: DataTypes.ENUM('inquiry', 'quote_request', 'contact', 'partnership', 'support', 'instant_access'),
+    type: DataTypes.ENUM('inquiry', 'quote_request', 'contact', 'partnership', 'support', 'instant_access', 'product_email'),
     allowNull: false,
     defaultValue: 'inquiry'
   },
   status: {
-    type: DataTypes.ENUM('pending', 'responded', 'resolved', 'spam'),
+    type: DataTypes.ENUM('sent', 'failed'),
     allowNull: false,
-    defaultValue: 'pending'
+    defaultValue: 'failed'
   },
   emailSent: {
     field: 'email_sent',
@@ -110,6 +118,9 @@ FormSubmission.init({
     },
     {
       fields: ['form_type']
+    },
+    {
+      fields: ['product_code']
     },
     {
       fields: ['status']

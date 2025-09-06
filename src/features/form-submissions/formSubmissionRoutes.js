@@ -89,6 +89,103 @@ router.post('/instant-access', formSubmissionController.submitInstantAccessForm)
 
 /**
  * @openapi
+ * /form-submissions/send-product-email:
+ *   post:
+ *     summary: Send professional product email (public endpoint)
+ *     tags: [Form Submissions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - product_code
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address to send product information to
+ *                 example: "indonesia.dds@gmail.com"
+ *               product_code:
+ *                 type: string
+ *                 description: Product code to send information about
+ *                 example: "ETA_01"
+ *     responses:
+ *       201:
+ *         description: Product email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Product information email sent successfully!
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 123
+ *                     emailSent:
+ *                       type: boolean
+ *                       example: true
+ *                     product:
+ *                       type: object
+ *                       properties:
+ *                         code:
+ *                           type: string
+ *                           example: ETA_01
+ *                         type:
+ *                           type: string
+ *                           example: Industrial
+ *                         application:
+ *                           type: string
+ *                           example: Manufacturing
+ *                     message:
+ *                       type: string
+ *                       example: Professional product information for ETA_01 has been sent to your email.
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Validation failed
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Email is required", "Product code is required"]
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Product with code 'ETA_01' not found
+ */
+router.post('/send-product-email', formSubmissionController.sendProductEmail);
+
+/**
+ * @openapi
  * /form-submissions:
  *   post:
  *     summary: Submit a form (public endpoint)

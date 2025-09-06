@@ -97,7 +97,15 @@ class FormSubmissionRepository {
   async markEmailSent(id) {
     return await this.update(id, {
       emailSent: true,
-      emailSentAt: new Date()
+      emailSentAt: new Date(),
+      status: 'sent'
+    });
+  }
+
+  async markEmailFailed(id) {
+    return await this.update(id, {
+      emailSent: false,
+      status: 'failed'
     });
   }
 

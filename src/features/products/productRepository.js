@@ -19,6 +19,12 @@ class ProductRepository {
     return ProductModel.findByPk(productId);
   }
 
+  async findByCode(productCode) {
+    return ProductModel.findOne({
+      where: { code: productCode }
+    });
+  }
+
   async findDistinctType() {
     const result = await ProductModel.findAll({
       attributes: [[fn('DISTINCT', col('type')), 'type']],

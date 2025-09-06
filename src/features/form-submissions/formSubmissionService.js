@@ -1,7 +1,11 @@
 const formSubmissionRepository = require('./formSubmissionRepository');
 const emailService = require('../../utils/emailService');
+const ProductRepository = require('../products/productRepository');
 
 class FormSubmissionService {
+  constructor() {
+    this.productRepository = new ProductRepository();
+  }
   async submitForm(formData, requestInfo = {}) {
     try {
       // Extract IP address and user agent from request
@@ -19,13 +23,16 @@ class FormSubmissionService {
       try {
         emailResult = await emailService.sendFormSubmissionNotification(formData);
         
-        // Mark email as sent in database
+        // Update status based on email sending result
         if (emailResult.success) {
           await formSubmissionRepository.markEmailSent(submission.id);
+        } else {
+          await formSubmissionRepository.markEmailFailed(submission.id);
         }
       } catch (emailError) {
         console.error('Email sending failed for submission:', submission.id, emailError);
-        // Don't fail the entire submission if email fails
+        // Mark email as failed in database
+        await formSubmissionRepository.markEmailFailed(submission.id);
         emailResult = { success: false, error: emailError.message };
       }
 
@@ -65,7 +72,7 @@ class FormSubmissionService {
 
   async updateSubmissionStatus(id, status) {
     try {
-      const validStatuses = ['pending', 'responded', 'resolved', 'spam'];
+      const validStatuses = ['sent', 'failed'];
       if (!validStatuses.includes(status)) {
         throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
       }
@@ -118,6 +125,8 @@ class FormSubmissionService {
       
       if (emailResult.success) {
         await formSubmissionRepository.markEmailSent(id);
+      } else {
+        await formSubmissionRepository.markEmailFailed(id);
       }
 
       return {
@@ -188,8 +197,11 @@ class FormSubmissionService {
       );
 
       if (emailResult.success) {
-        // Update submission status to responded
-        await formSubmissionRepository.update(id, { status: 'responded' });
+        // Update submission status to sent (since custom response email was sent)
+        await formSubmissionRepository.update(id, { status: 'sent' });
+      } else {
+        // Mark as failed if custom response couldn't be sent
+        await formSubmissionRepository.update(id, { status: 'failed' });
       }
 
       return emailResult;
@@ -236,13 +248,16 @@ class FormSubmissionService {
           city: formData.city
         });
         
-        // Mark email as sent in database
+        // Update status based on email sending result
         if (emailResult.success) {
           await formSubmissionRepository.markEmailSent(submission.id);
+        } else {
+          await formSubmissionRepository.markEmailFailed(submission.id);
         }
       } catch (emailError) {
         console.error('Email sending failed for instant access submission:', submission.id, emailError);
-        // Don't fail the entire submission if email fails
+        // Mark email as failed in database
+        await formSubmissionRepository.markEmailFailed(submission.id);
         emailResult = { success: false, error: emailError.message };
       }
 
@@ -256,6 +271,72 @@ class FormSubmissionService {
       };
     } catch (error) {
       console.error('Instant access form submission failed:', error);
+      throw error;
+    }
+  }
+
+  async sendProductEmail(email, productCode, requestInfo = {}) {
+    try {
+      // Validate input
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Valid email address is required');
+      }
+
+      if (!productCode || productCode.trim().length < 2) {
+        throw new Error('Product code is required');
+      }
+
+      // Find product by code
+      const product = await this.productRepository.findByCode(productCode);
+      if (!product) {
+        throw new Error(`Product with code '${productCode}' not found`);
+      }
+
+      // Create form submission record for tracking
+      const submissionData = {
+        firstName: 'Product',
+        lastName: 'Inquiry',
+        email: email,
+        phone: null,
+        company: null,
+        subject: `Product Information Request: ${productCode}`,
+        message: `User requested product information for product code: ${productCode}`,
+        productCode: productCode, // Save the product code
+        formType: 'product_email',
+        ipAddress: requestInfo.ip,
+        userAgent: requestInfo.userAgent
+      };
+
+      // Save form submission to database
+      const submission = await formSubmissionRepository.create(submissionData);
+      
+      // Try to send product email
+      let emailResult = null;
+      try {
+        emailResult = await emailService.sendProductEmail(email, productCode, product);
+        
+        // Update status based on email sending result
+        if (emailResult.success) {
+          await formSubmissionRepository.markEmailSent(submission.id);
+        } else {
+          await formSubmissionRepository.markEmailFailed(submission.id);
+        }
+      } catch (emailError) {
+        console.error('Product email sending failed for submission:', submission.id, emailError);
+        // Mark email as failed in database
+        await formSubmissionRepository.markEmailFailed(submission.id);
+        emailResult = { success: false, error: emailError.message };
+      }
+
+      return {
+        success: true,
+        submission,
+        product,
+        emailSent: emailResult ? emailResult.success : false,
+        emailError: emailResult && !emailResult.success ? emailResult.error : null
+      };
+    } catch (error) {
+      console.error('Product email service failed:', error);
       throw error;
     }
   }
@@ -298,6 +379,7 @@ class FormSubmissionService {
   }
 
   validateFormData(data) {
+    const errors = [];
 
     if (!data.firstName || data.firstName.trim().length < 2) {
       errors.push('First name must be at least 2 characters long');

@@ -92,6 +92,78 @@ class FormSubmissionController {
     }
   }
 
+  // Public endpoint for sending product-specific emails
+  async sendProductEmail(req, res, next) {
+    try {
+      const { email, product_code } = req.body;
+      
+      // Validate request data
+      if (!email) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Email is required',
+          errors: ['Email is required']
+        });
+      }
+      
+      if (!product_code) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Product code is required',
+          errors: ['Product code is required']
+        });
+      }
+
+      // Extract request information
+      const requestInfo = {
+        ip: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent')
+      };
+
+      // Send product email
+      const result = await formSubmissionService.sendProductEmail(email, product_code, requestInfo);
+      
+      // Return success response
+      const response = {
+        status: 'success',
+        message: 'Product information email sent successfully!',
+        data: {
+          id: result.submission.id,
+          emailSent: result.emailSent,
+          product: {
+            code: result.product.code,
+            type: result.product.type,
+            application: result.product.application_en || result.product.application
+          },
+          message: `Professional product information for ${product_code} has been sent to your email.`
+        }
+      };
+
+      // Include email error in response if email failed but form was saved
+      if (!result.emailSent && result.emailError) {
+        response.warning = 'Request was saved but email sending failed';
+        response.emailError = result.emailError;
+      }
+
+      res.status(201).json(response);
+    } catch (error) {
+      if (error.message.includes('not found')) {
+        return res.status(404).json({
+          status: 'error',
+          message: error.message
+        });
+      }
+      if (error.message.includes('required') || error.message.includes('Valid email')) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Validation failed',
+          errors: [error.message]
+        });
+      }
+      next(error);
+    }
+  }
+
   // Admin endpoints - require authentication
   async getSubmissions(req, res, next) {
     try {

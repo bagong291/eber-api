@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
-const { User } = require('../features/users/User');
-const sequelize = require('../../config/database');
+const User = require('../features/users/User');
+const sequelize = require('../config/database');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
