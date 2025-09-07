@@ -8,8 +8,8 @@ const path = require('path');
 const app = express();
 const cors          = require('cors');
 // Middleware
-app.use(bodyParser.json({ limit: '10mb' })); // atur limit lebih besar sesuai kebutuhan
-app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+app.use(bodyParser.json({ limit: '20mb' })); // atur limit lebih besar sesuai kebutuhan
+app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
 
 app.use(morgan('dev'));
 app.use(cors()); 
