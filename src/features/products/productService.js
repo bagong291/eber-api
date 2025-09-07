@@ -54,7 +54,7 @@ class ProductService {
 
     // ✅ Filter by status
     if (filter.status) {
-      where.status = filter.status === 'true' ? true : false;
+      where.status = filter.status === true ? true : false;
     }
 
     const limit = Math.min(pageSize, 100);
