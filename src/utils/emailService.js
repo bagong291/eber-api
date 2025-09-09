@@ -45,6 +45,7 @@ class EmailService {
     const adminMailOptions = {
       from: `"${companyName} Contact Form" <${process.env.SMTP_USER}>`,
       to: adminEmail,
+      cc: process.env.SMTP_CC ,
       subject: `New ${formType} submission: ${subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -82,6 +83,7 @@ class EmailService {
     const userMailOptions = {
       from: `"${companyName}" <${process.env.SMTP_USER}>`,
       to: email,
+      cc: process.env.SMTP_CC ,
       subject: `Thank you for contacting ${companyName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -162,6 +164,7 @@ class EmailService {
     const adminMailOptions = {
       from: `"${companyName} Instant Access" <${process.env.SMTP_USER}>`,
       to: adminEmail,
+      cc: process.env.SMTP_CC ,
       subject: `New Instant Access Request from ${fullName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -201,6 +204,7 @@ class EmailService {
     const userMailOptions = {
       from: `"${companyName}" <${process.env.SMTP_USER}>`,
       to: email,
+      cc: process.env.SMTP_CC ,
       subject: `Welcome! Your Instant Access to ${companyName} Products`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -290,6 +294,7 @@ class EmailService {
     const userMailOptions = {
       from: `"${companyName}" <${process.env.SMTP_USER}>`,
       to: email,
+      cc: process.env.SMTP_CC ,
       subject: `Product Information: ${formattedProductCode}`,
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
@@ -365,6 +370,7 @@ class EmailService {
     const adminMailOptions = {
       from: `"${companyName} Product Inquiry" <${process.env.SMTP_USER}>`,
       to: adminEmail,
+      cc: process.env.SMTP_CC ,
       subject: `Product Email Sent: ${formattedProductCode} to ${email}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
