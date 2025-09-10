@@ -158,7 +158,7 @@ class EmailService {
       timestamp: new Date().toISOString()
     };
     const encodedUserData = Buffer.from(JSON.stringify(userData)).toString('base64');
-    const productListUrl = `${websiteUrl}/products?access=${encodedUserData}`;
+    const productListUrl = `${websiteUrl}/product?access=${encodedUserData}`;
 
     // Email to admin
     const adminMailOptions = {
@@ -330,7 +330,7 @@ class EmailService {
             
             <!-- Call to Action -->
             <div style="text-align: center; margin: 40px 0;">
-              <a href="${websiteUrl}/products?code=${productCode}" 
+              <a href="${websiteUrl}/product?code=${productCode}" 
                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 50px; display: inline-block; font-weight: 600; font-size: 16px; transition: transform 0.2s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
                 📋 View Complete Product Details
               </a>
