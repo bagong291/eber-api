@@ -39,7 +39,7 @@ class EmailService {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@company.com';
     const companyName = process.env.COMPANY_NAME || 'Your Company';
     const websiteUrl = process.env.WEBSITE_URL || 'https://yourcompany.com';
-    const headerImageUrl = `${websiteUrl}/uploads/header.png`;
+    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
     const productListUrl = `${websiteUrl}/products`;
 
     // Email to admin
@@ -182,7 +182,7 @@ class EmailService {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@company.com';
     const companyName = process.env.COMPANY_NAME || 'Your Company';
     const websiteUrl = process.env.WEBSITE_URL || 'https://yourcompany.com';
-    const headerImageUrl = `${websiteUrl}/uploads/header.png`;
+    const headerImageUrl =`${process.env.BACKEND_URL}/uploads/header.png`;
     
     // Create base64 encoded user data for the product link
     const userData = {
@@ -350,7 +350,7 @@ class EmailService {
     const companyName = process.env.COMPANY_NAME || 'Your Company';
     const websiteUrl = process.env.WEBSITE_URL || 'https://yourcompany.com';
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@company.com';
-    const headerImageUrl = `${websiteUrl}/uploads/header.png`;
+    const headerImageUrl =`${process.env.BACKEND_URL}/uploads/header.png`;
     
     // Format product name from code (e.g., ETA_01 -> ETA 01)
     const formattedProductCode = productCode.replace('_', ' ');
