@@ -50,33 +50,27 @@ class ArticleRepository {
     const article = await ArticleModel.findByPk(articleId);
     if (!article) return null;
     
-    console.log('=== UPDATE ARTICLE DEBUG ===');
-    console.log('Article ID:', articleId);
-    console.log('Updates received:', JSON.stringify(updates, null, 2));
-    console.log('Has createdAt in updates:', !!updates.createdAt);
-    console.log('Current article createdAt:', article.createdAt);
-    
-    // If createdAt is in the updates, we need to manually set it
+    // If createdAt is in the updates, we need to use raw SQL
     if (updates.createdAt) {
-      console.log('Attempting to set custom createdAt:', updates.createdAt);
+      const { createdAt, ...otherUpdates } = updates;
       
-      // Set all fields including createdAt
-      Object.keys(updates).forEach(key => {
-        console.log(`Setting ${key}:`, updates[key]);
-        article.set(key, updates[key]);
-      });
+      // First update all other fields normally
+      if (Object.keys(otherUpdates).length > 0) {
+        await article.update(otherUpdates);
+      }
       
-      console.log('Article values before save:', article.get());
+      // Then use raw SQL to update createdAt
+      const sequelize = ArticleModel.sequelize;
+      await sequelize.query(
+        'UPDATE articles SET created_at = :createdAt WHERE id = :id',
+        {
+          replacements: { createdAt, id: articleId },
+          type: sequelize.QueryTypes.UPDATE
+        }
+      );
       
-      // Save with timestamps disabled to preserve createdAt
-      await article.save({ timestamps: false });
-      
-      console.log('Article saved, createdAt after save:', article.createdAt);
-      
+      // Reload to get updated values
       await article.reload();
-      
-      console.log('Article after reload:', article.get());
-      
       return article;
     }
     
