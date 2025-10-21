@@ -37,10 +37,9 @@ class ArticleRepository {
   static async createArticle(data) {
     // If createdAt is provided, we need to handle it specially
     if (data.createdAt) {
-      const article = await ArticleModel.create(data);
-      // Update the createdAt after creation
-      await article.update({ createdAt: data.createdAt }, { silent: true });
-      // Reload to get the updated values
+      const article = ArticleModel.build(data);
+      article.set('createdAt', data.createdAt);
+      await article.save({ timestamps: false });
       await article.reload();
       return article;
     }
@@ -51,9 +50,14 @@ class ArticleRepository {
     const article = await ArticleModel.findByPk(articleId);
     if (!article) return null;
     
-    // If createdAt is in the updates, use silent: true to allow timestamp override
+    // If createdAt is in the updates, we need to manually set it
     if (updates.createdAt) {
-      await article.update(updates, { silent: true });
+      // Set all fields including createdAt
+      Object.keys(updates).forEach(key => {
+        article.set(key, updates[key]);
+      });
+      // Save with timestamps disabled to preserve createdAt
+      await article.save({ timestamps: false });
       await article.reload();
       return article;
     }
