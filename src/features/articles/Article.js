@@ -17,9 +17,7 @@ Article.init({
   image: { type: DataTypes.STRING, allowNull: true },
   pdf:   { type: DataTypes.STRING, allowNull: true },
   author:{ type: DataTypes.STRING },
-  status: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
-  createdAt: { type: DataTypes.DATE, allowNull: true },
-  updatedAt: { type: DataTypes.DATE, allowNull: true }
+  status: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
 }, {
   sequelize,
   modelName: 'Article',
