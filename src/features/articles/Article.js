@@ -17,12 +17,16 @@ Article.init({
   image: { type: DataTypes.STRING, allowNull: true },
   pdf:   { type: DataTypes.STRING, allowNull: true },
   author:{ type: DataTypes.STRING },
-  status: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true }
+  status: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+  created_at: { type: DataTypes.DATE, allowNull: true },
+  updated_at: { type: DataTypes.DATE, allowNull: true }
 }, {
   sequelize,
   modelName: 'Article',
   tableName: 'articles',
-  timestamps: true
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 module.exports = Article;
