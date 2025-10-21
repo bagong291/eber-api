@@ -34,13 +34,31 @@ class ArticleRepository {
     return ArticleModel.findByPk(articleId);
   }
 
-  static createArticle(data) {
+  static async createArticle(data) {
+    // If createdAt is provided, we need to handle it specially
+    if (data.createdAt) {
+      const article = await ArticleModel.create(data);
+      // Update the createdAt after creation
+      await article.update({ createdAt: data.createdAt }, { silent: true });
+      // Reload to get the updated values
+      await article.reload();
+      return article;
+    }
     return ArticleModel.create(data);
   }
 
-  static updateArticle(articleId, updates) {
-    return ArticleModel.findByPk(articleId)
-      .then(article => article && article.update(updates));
+  static async updateArticle(articleId, updates) {
+    const article = await ArticleModel.findByPk(articleId);
+    if (!article) return null;
+    
+    // If createdAt is in the updates, use silent: true to allow timestamp override
+    if (updates.createdAt) {
+      await article.update(updates, { silent: true });
+      await article.reload();
+      return article;
+    }
+    
+    return article.update(updates);
   }
 
   static deleteArticle(articleId) {
