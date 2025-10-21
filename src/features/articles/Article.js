@@ -18,15 +18,13 @@ Article.init({
   pdf:   { type: DataTypes.STRING, allowNull: true },
   author:{ type: DataTypes.STRING },
   status: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
-  created_at: { type: DataTypes.DATE, allowNull: true },
-  updated_at: { type: DataTypes.DATE, allowNull: true }
+  createdAt: { type: DataTypes.DATE, allowNull: true },
+  updatedAt: { type: DataTypes.DATE, allowNull: true }
 }, {
   sequelize,
   modelName: 'Article',
   tableName: 'articles',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: true
 });
 
 module.exports = Article;
