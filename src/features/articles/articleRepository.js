@@ -50,15 +50,33 @@ class ArticleRepository {
     const article = await ArticleModel.findByPk(articleId);
     if (!article) return null;
     
+    console.log('=== UPDATE ARTICLE DEBUG ===');
+    console.log('Article ID:', articleId);
+    console.log('Updates received:', JSON.stringify(updates, null, 2));
+    console.log('Has createdAt in updates:', !!updates.createdAt);
+    console.log('Current article createdAt:', article.createdAt);
+    
     // If createdAt is in the updates, we need to manually set it
     if (updates.createdAt) {
+      console.log('Attempting to set custom createdAt:', updates.createdAt);
+      
       // Set all fields including createdAt
       Object.keys(updates).forEach(key => {
+        console.log(`Setting ${key}:`, updates[key]);
         article.set(key, updates[key]);
       });
+      
+      console.log('Article values before save:', article.get());
+      
       // Save with timestamps disabled to preserve createdAt
       await article.save({ timestamps: false });
+      
+      console.log('Article saved, createdAt after save:', article.createdAt);
+      
       await article.reload();
+      
+      console.log('Article after reload:', article.get());
+      
       return article;
     }
     
