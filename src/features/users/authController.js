@@ -5,11 +5,21 @@ const UserRepository = require('./userRepository');
 
 exports.register = async (req, res, next) => {
   try {
-    const existing = await UserRepository.findByUsername(req.body.username);
+    // Validate ADMIN_SECRET from payload
+    const { adminSecret, ...userData } = req.body;
+    
+    if (!adminSecret || adminSecret !== config.adminSecret) {
+      return res.status(403).json({ 
+        status: 'failed',
+        message: 'Invalid or missing admin secret' 
+      });
+    }
+    
+    const existing = await UserRepository.findByUsername(userData.username);
     if (existing) {
       return res.status(400).json({ message: 'Username already exists' });
     }
-    const user = await require('./userService').registerUser(req.body);
+    const user = await require('./userService').registerUser(userData);
     const safeUser = user.get({ plain: true });
     delete safeUser.password;
     res.status(201).json(safeUser);
