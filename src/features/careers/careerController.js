@@ -1,4 +1,5 @@
 const CareerService = require('./careerService');
+const emailService = require('../../utils/emailService');
 
 exports.listCareers = async (req, res, next) => {
   try {
@@ -83,6 +84,72 @@ exports.deleteCareer = async (req, res, next) => {
     await CareerService.deleteCareer(req.params.id);
     res.status(204).end();
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.submitCareerApplication = async (req, res, next) => {
+  try {
+    const { firstname, lastname, email, message } = req.body;
+    
+    // Validate required fields
+    if (!firstname || !lastname || !email || !message) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'All fields are required: firstname, lastname, email, message'
+      });
+    }
+
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid email format'
+      });
+    }
+
+    // Get uploaded file (if any)
+    const file = req.file;
+
+    // Validate file if uploaded
+    if (file) {
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'File size must not exceed 10MB'
+        });
+      }
+    }
+
+    // Prepare data for email
+    const applicationData = {
+      firstName: firstname,
+      lastName: lastname,
+      email,
+      message
+    };
+
+    // Send email with attachment
+    const emailResult = await emailService.sendCareerApplicationEmail(
+      applicationData,
+      file
+    );
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Career application submitted successfully!',
+      data: {
+        emailSent: emailResult.success,
+        applicant: {
+          name: `${firstname} ${lastname}`,
+          email
+        },
+        hasAttachment: !!file
+      }
+    });
+  } catch (error) {
+    console.error('Career application submission error:', error);
     next(error);
   }
 };

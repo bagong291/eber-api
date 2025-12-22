@@ -22,7 +22,7 @@ class EmailService {
     }
   }
 
-  async sendEmail({ to, subject, htmlBody, textBody, cc }) {
+  async sendEmail({ to, subject, htmlBody, textBody, cc, attachments = [] }) {
     try {
       const formData = new FormData();
       formData.append('from_email', this.fromEmail);
@@ -31,6 +31,20 @@ class EmailService {
       formData.append('subject', subject);
       formData.append('body', htmlBody || textBody);
       formData.append('is_html', htmlBody ? 'true' : 'false');
+
+      // Add attachments if provided
+      if (attachments && attachments.length > 0) {
+        for (const attachment of attachments) {
+          if (attachment.buffer) {
+            // From buffer
+            formData.append('attachments', attachment.buffer, attachment.filename);
+          } else if (attachment.path) {
+            // From file path
+            const fs = require('fs');
+            formData.append('attachments', fs.createReadStream(attachment.path), attachment.filename || attachment.originalname);
+          }
+        }
+      }
 
       const response = await axios.post(this.apiUrl, formData, {
         headers: {
@@ -61,76 +75,89 @@ class EmailService {
 
     // Email to admin
     const adminHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <div style="text-align: center; background: #f8f9fa;">
-          <img src="${headerImageUrl}" alt="${companyName} Header" style="max-width: 100%; height: auto; display: block; margin: 0 auto;"/>
-        </div>
-        <div style="padding: 40px 30px;">
-          <div style="margin-bottom: 30px;">
-            <h2 style="color: #333; font-size: 24px; margin: 0 0 10px 0; font-weight: 600;">New Form Submission - ${formType.charAt(0).toUpperCase() + formType.slice(1)}</h2>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
           </div>
-          <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 25px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-            <h3 style="color: #333; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Contact Information</h3>
-            <div style="color: #555; font-size: 16px; line-height: 1.6;">
-              <p style="margin: 0 0 10px 0;"><strong>Name:</strong> ${firstName} ${lastName}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #667eea;">${email}</a></p>
-              ${phone ? `<p style="margin: 0 0 10px 0;"><strong>Phone:</strong> ${phone}</p>` : ''}
-              ${company ? `<p style="margin: 0 0 10px 0;"><strong>Company:</strong> ${company}</p>` : ''}
+          <div style="padding: 32px 24px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">New ${formType}</div>
+              <h2 style="color: #1a202c; font-size: 26px; margin: 0; font-weight: 700; line-height: 1.3;">Form Submission Received</h2>
+            </div>
+            <div style="background: linear-gradient(135deg, #f6f8fb 0%, #e9ecf5 100%); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+              <h3 style="color: #2d3748; margin: 0 0 16px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📋 Contact Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Name:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${firstName} ${lastName}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Email:</strong></td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none; font-size: 14px;">${email}</a></td></tr>
+                ${phone ? `<tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Phone:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${phone}</td></tr>` : ''}
+                ${company ? `<tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Company:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${company}</td></tr>` : ''}
+              </table>
+            </div>
+            <div style="background: #fff; border: 2px solid #ffd56b; border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+              <h3 style="color: #744210; margin: 0 0 12px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">💬 Message</h3>
+              <div style="color: #2d3748; font-size: 14px; font-weight: 600; margin-bottom: 8px;">${subject}</div>
+              <div style="background: #fafafa; padding: 16px; border-radius: 8px; color: #4a5568; font-size: 14px; line-height: 1.6; white-space: pre-wrap; border-left: 3px solid #ffd56b;">${message}</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px;">
+              <div style="color: #718096; font-size: 13px;">⏰ Submitted on ${new Date().toLocaleString()}</div>
             </div>
           </div>
-          <div style="background: #fff7e6; border: 1px solid #ffd56b; border-radius: 8px; padding: 25px; margin: 30px 0;">
-            <h3 style="color: #b8860b; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Message Details</h3>
-            <p style="color: #8b6914; margin: 0 0 15px 0; font-size: 16px;"><strong>Subject:</strong> ${subject}</p>
-            <div style="color: #8b6914;">
-              <strong>Message:</strong>
-              <div style="background: white; padding: 15px; border-radius: 6px; margin-top: 8px; border: 1px solid #e0e6ed; white-space: pre-wrap;">${message}</div>
-            </div>
-          </div>
-          <div style="background: #f0f7ff; border-radius: 8px; padding: 25px; margin: 30px 0;">
-            <p style="margin: 0; color: #1e40af; font-size: 16px; font-weight: 500;">
-              <strong>Submission Time:</strong> ${new Date().toLocaleString()}
-            </p>
-          </div>
         </div>
-      </div>
+      </body>
+      </html>
     `;
 
     // User auto-response
     const userHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <div style="text-align: center; background: #f8f9fa;">
-          <img src="${headerImageUrl}" alt="${companyName} Header" style="max-width: 100%; height: auto; display: block; margin: 0 auto;"/>
-        </div>
-        <div style="padding: 40px 30px;">
-          <div style="margin-bottom: 30px;">
-            <h2 style="color: #333; font-size: 24px; margin: 0 0 10px 0; font-weight: 600;">Thank You for Your ${formType.charAt(0).toUpperCase() + formType.slice(1)}</h2>
-            <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0;">Dear ${firstName} ${lastName},</p>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
           </div>
-          <p style="color: #666; font-size: 16px; line-height: 1.6;">Thank you for reaching out to us! We have received your ${formType} and will get back to you within 24-48 hours.</p>
-          <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 25px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-            <h3 style="color: #333; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Your Submission Summary</h3>
-            <div style="color: #555; font-size: 16px; line-height: 1.6;">
-              <p style="margin: 0 0 10px 0;"><strong>Subject:</strong> ${subject}</p>
-              <p style="margin: 0;"><strong>Submitted on:</strong> ${new Date().toLocaleString()}</p>
+          <div style="padding: 40px 28px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="font-size: 48px; line-height: 1; margin-bottom: 16px;">✨</div>
+              <h2 style="color: #1a202c; font-size: 28px; margin: 0 0 12px 0; font-weight: 700; line-height: 1.2;">Thank You!</h2>
+              <p style="color: #4a5568; font-size: 16px; margin: 0; line-height: 1.5;">Hi ${firstName}, we've received your message</p>
+            </div>
+            <div style="background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #667eea;">
+              <div style="color: #5a67d8; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">⚡ Quick Response</div>
+              <p style="color: #2d3748; font-size: 15px; margin: 0; line-height: 1.6;">Our team will review your message and get back to you within <strong>24-48 hours</strong>. We appreciate your patience!</p>
+            </div>
+            <div style="background: #f7fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📝 Your Submission</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 6px 0; color: #718096; font-size: 13px;">Subject</td><td style="padding: 6px 0; color: #2d3748; font-size: 13px; font-weight: 600;">${subject}</td></tr>
+                <tr><td style="padding: 6px 0; color: #718096; font-size: 13px;">Date</td><td style="padding: 6px 0; color: #2d3748; font-size: 13px; font-weight: 600;">${new Date().toLocaleString()}</td></tr>
+              </table>
+            </div>
+            <div style="background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%); border-radius: 12px; padding: 28px; text-align: center; margin-bottom: 24px;">
+              <div style="font-size: 32px; margin-bottom: 12px;">🛍️</div>
+              <h3 style="color: #744210; margin: 0 0 8px 0; font-size: 18px; font-weight: 700;">Explore Our Products</h3>
+              <p style="color: #975a16; margin: 0 0 20px 0; font-size: 14px; line-height: 1.5;">Discover our complete catalog while you wait</p>
+              <a href="${productListUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 25px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.3s;">View Product Catalog</a>
             </div>
           </div>
-          <div style="background: #fff7e6; border: 1px solid #ffd56b; border-radius: 8px; padding: 25px; margin: 30px 0;">
-            <h3 style="color: #b8860b; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Explore Our Products</h3>
-            <p style="color: #8b6914; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">While you wait for our response, feel free to browse our complete product catalog:</p>
-            <div style="text-align: center; margin: 20px 0;">
-              <a href="${productListUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 50px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                📋 View Our Products
-              </a>
-            </div>
+          <div style="background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%); padding: 28px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #718096; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">Best regards,</p>
+            <p style="color: #2d3748; margin: 0; font-size: 17px; font-weight: 700;">${companyName} Team</p>
           </div>
         </div>
-        <div style="background: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
-          <div style="text-align: center;">
-            <p style="color: #6c757d; margin: 0 0 15px 0; font-size: 16px; font-weight: 500;">With warmest regards,</p>
-            <p style="color: #495057; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">The ${companyName} Team</p>
-          </div>
-        </div>
-      </div>
+      </body>
+      </html>
     `;
 
     try {
@@ -180,40 +207,74 @@ class EmailService {
     const productListUrl = `${websiteUrl}/product?access=${encodedUserData}`;
 
     const adminHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden;">
-        <div style="text-align: center; background: #f8f9fa;">
-          <img src="${headerImageUrl}" alt="${companyName} Header" style="max-width: 100%; height: auto;"/>
-        </div>
-        <div style="padding: 40px 30px;">
-          <h2 style="color: #333; font-size: 24px; margin: 0 0 10px 0;">New Instant Access Request</h2>
-          <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 25px; margin: 30px 0;">
-            <h3 style="color: #333; margin: 0 0 15px 0;">Contact Information</h3>
-            <p><strong>Name:</strong> ${fullName}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Phone:</strong> ${phone}</p>
-            ${company ? `<p><strong>Company:</strong> ${company}</p>` : ''}
-            ${city ? `<p><strong>City:</strong> ${city}</p>` : ''}
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
+          </div>
+          <div style="padding: 32px 24px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <div style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Instant Access</div>
+              <h2 style="color: #1a202c; font-size: 24px; margin: 0; font-weight: 700;">New Request</h2>
+            </div>
+            <div style="background: linear-gradient(135deg, #f6f8fb 0%, #e9ecf5 100%); border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0;">
+              <h3 style="color: #2d3748; margin: 0 0 16px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📋 Contact Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Name:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${fullName}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Email:</strong></td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none; font-size: 14px;">${email}</a></td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Phone:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${phone}</td></tr>
+                ${company ? `<tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Company:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${company}</td></tr>` : ''}
+                ${city ? `<tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>City:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${city}</td></tr>` : ''}
+              </table>
+            </div>
           </div>
         </div>
-      </div>
+      </body>
+      </html>
     `;
 
     const userHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden;">
-        <div style="text-align: center; background: #f8f9fa;">
-          <img src="${headerImageUrl}" alt="${companyName} Header" style="max-width: 100%; height: auto;"/>
-        </div>
-        <div style="padding: 40px 30px;">
-          <h2 style="color: #333; font-size: 24px;">Welcome to ${companyName}!</h2>
-          <p>Dear ${fullName},</p>
-          <p>Thank you for requesting instant access to our product catalog!</p>
-          <div style="text-align: center; margin: 20px 0;">
-            <a href="${productListUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 50px; display: inline-block;">
-              🛍️ View Product Catalog
-            </a>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
+          </div>
+          <div style="padding: 40px 28px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="font-size: 48px; line-height: 1; margin-bottom: 16px;">🎉</div>
+              <h2 style="color: #1a202c; font-size: 28px; margin: 0 0 12px 0; font-weight: 700; line-height: 1.2;">Welcome, ${fullName}!</h2>
+              <p style="color: #4a5568; font-size: 16px; margin: 0; line-height: 1.5;">Your instant access is ready</p>
+            </div>
+            <div style="background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%); border-radius: 12px; padding: 24px; margin-bottom: 28px; border-left: 4px solid #667eea;">
+              <div style="color: #5a67d8; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">✅ Access Granted</div>
+              <p style="color: #2d3748; font-size: 15px; margin: 0; line-height: 1.6;">Thank you for requesting access to our product catalog! Click the button below to explore our complete collection.</p>
+            </div>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${productListUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); transition: all 0.3s;">🛍️ View Product Catalog</a>
+            </div>
+            <div style="background: #f7fafc; border-radius: 12px; padding: 20px; text-align: center;">
+              <p style="color: #718096; font-size: 13px; margin: 0; line-height: 1.5;">💡 Explore our products anytime with this exclusive link</p>
+            </div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%); padding: 28px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #718096; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">Best regards,</p>
+            <p style="color: #2d3748; margin: 0; font-size: 17px; font-weight: 700;">${companyName} Team</p>
           </div>
         </div>
-      </div>
+      </body>
+      </html>
     `;
 
     try {
@@ -256,40 +317,83 @@ class EmailService {
     const formattedProductCode = productCode.replace('_', ' ');
     
     const userHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden;">
-        <div style="text-align: center; background: #f8f9fa;">
-          <img src="${headerImageUrl}" alt="${companyName} Header" style="max-width: 100%; height: auto;"/>
-        </div>
-        <div style="padding: 40px 30px;">
-          <h2 style="color: #333; font-size: 24px;">Dear Friends,</h2>
-          <p style="color: #666;">Thank you so much for your interest in our product.</p>
-          <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 25px; margin: 30px 0;">
-            <h3 style="color: #333;">Product Details</h3>
-            <p><strong>Product Code:</strong> ${formattedProductCode}</p>
-            ${productData?.application_en ? `<p><strong>Application:</strong> ${productData.application_en}</p>` : ''}
-            ${productData?.type ? `<p><strong>Type:</strong> ${productData.type}</p>` : ''}
-            ${productData?.performanceFeature_en ? `<div><strong>Performance Features:</strong><div style="background: white; padding: 15px; border-radius: 6px; margin-top: 8px;">${productData.performanceFeature_en}</div></div>` : ''}
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
           </div>
-          <div style="text-align: center; margin: 40px 0;">
-            <a href="${websiteUrl}/product?code=${productCode}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 50px; display: inline-block;">
-              📋 View Complete Product Details
-            </a>
+          <div style="padding: 40px 28px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="font-size: 48px; line-height: 1; margin-bottom: 16px;">👋</div>
+              <h2 style="color: #1a202c; font-size: 28px; margin: 0 0 12px 0; font-weight: 700; line-height: 1.2;">Hello, Friend!</h2>
+              <p style="color: #4a5568; font-size: 16px; margin: 0; line-height: 1.5;">Thank you for your interest in our products</p>
+            </div>
+            <div style="background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%); border-radius: 12px; padding: 28px; margin-bottom: 24px; border-left: 4px solid #667eea;">
+              <div style="color: #5a67d8; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">🎯 Product Information</div>
+              <div style="background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 12px;">
+                <div style="color: #2d3748; font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Product Code</div>
+                <div style="color: #1a202c; font-size: 18px; font-weight: 700; margin-bottom: 16px;">${formattedProductCode}</div>
+                ${productData?.application_en ? `
+                  <div style="color: #2d3748; font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 16px;">Application</div>
+                  <div style="color: #4a5568; font-size: 15px; line-height: 1.6;">${productData.application_en}</div>
+                ` : ''}
+                ${productData?.type ? `
+                  <div style="color: #2d3748; font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 16px;">Type</div>
+                  <div style="color: #4a5568; font-size: 15px;">${productData.type}</div>
+                ` : ''}
+              </div>
+              ${productData?.performanceFeature_en ? `
+                <div style="background: #ffffff; border-radius: 8px; padding: 20px;">
+                  <div style="color: #2d3748; font-size: 13px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">✨ Performance Features</div>
+                  <div style="color: #4a5568; font-size: 14px; line-height: 1.6;">${productData.performanceFeature_en}</div>
+                </div>
+              ` : ''}
+            </div>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${websiteUrl}/product?code=${productCode}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); transition: all 0.3s;">📖 View Complete Details</a>
+            </div>
+            <div style="background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%); border-radius: 12px; padding: 20px; text-align: center;">
+              <p style="color: #975a16; font-size: 13px; margin: 0; line-height: 1.5;">💡 Need more information? Feel free to contact us anytime</p>
+            </div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%); padding: 28px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #718096; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">Best regards,</p>
+            <p style="color: #2d3748; margin: 0; font-size: 17px; font-weight: 700;">${companyName} Team</p>
           </div>
         </div>
-        <div style="background: #f8f9fa; padding: 30px; text-align: center;">
-          <p style="color: #6c757d; margin: 0;">With warmest regards,</p>
-          <p style="color: #495057; font-weight: 600;">The ${companyName} Team</p>
-        </div>
-      </div>
+      </body>
+      </html>
     `;
 
     const adminHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto;">
-        <h2>Product Email Sent</h2>
-        <p><strong>Recipient:</strong> ${email}</p>
-        <p><strong>Product Code:</strong> ${productCode}</p>
-        <p><strong>Sent at:</strong> ${new Date().toLocaleString()}</p>
-      </div>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); padding: 32px 24px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">✅ Email Sent</div>
+            <h2 style="color: #1a202c; font-size: 24px; margin: 0; font-weight: 700;">Product Email Delivered</h2>
+          </div>
+          <div style="background: linear-gradient(135deg, #f6f8fb 0%, #e9ecf5 100%); border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Recipient:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${email}</td></tr>
+              <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Product Code:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${productCode}</td></tr>
+              <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Sent at:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${new Date().toLocaleString()}</td></tr>
+            </table>
+          </div>
+        </div>
+      </body>
+      </html>
     `;
 
     try {
@@ -337,6 +441,138 @@ class EmailService {
       };
     } catch (error) {
       console.error('Failed to send custom email:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+  }
+
+  async sendCareerApplicationEmail(formData, fileAttachment) {
+    const { firstName, lastName, email, message } = formData;
+    
+    const hrEmail = process.env.HR_EMAIL || 'hr@company.com';
+    const companyName = process.env.COMPANY_NAME || 'Your Company';
+    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
+    
+    // Email to HR with attachment
+    const hrHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
+          </div>
+          <div style="padding: 32px 24px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">💼 Career Application</div>
+              <h2 style="color: #1a202c; font-size: 26px; margin: 0; font-weight: 700; line-height: 1.3;">New Applicant</h2>
+            </div>
+            <div style="background: linear-gradient(135deg, #f6f8fb 0%, #e9ecf5 100%); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+              <h3 style="color: #2d3748; margin: 0 0 16px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">👤 Applicant Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Name:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${firstName} ${lastName}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Email:</strong></td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none; font-size: 14px;">${email}</a></td></tr>
+              </table>
+            </div>
+            <div style="background: #fff; border: 2px solid #ffd56b; border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+              <h3 style="color: #744210; margin: 0 0 12px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📝 Cover Letter</h3>
+              <div style="background: #fafafa; padding: 16px; border-radius: 8px; color: #4a5568; font-size: 14px; line-height: 1.6; white-space: pre-wrap; border-left: 3px solid #ffd56b;">${message}</div>
+            </div>
+            ${fileAttachment ? `<div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 8px;">📎</div>
+              <p style="margin: 0; color: #065f46; font-size: 15px; font-weight: 600;">${fileAttachment.originalname}</p>
+              <p style="margin: 4px 0 0 0; color: #047857; font-size: 13px;">Resume attached to this email</p>
+            </div>` : ''}
+            <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px;">
+              <div style="color: #718096; font-size: 13px;">⏰ Submitted on ${new Date().toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Email to applicant (confirmation)
+    const applicantHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
+          </div>
+          <div style="padding: 40px 28px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="font-size: 48px; line-height: 1; margin-bottom: 16px;">🎉</div>
+              <h2 style="color: #1a202c; font-size: 28px; margin: 0 0 12px 0; font-weight: 700; line-height: 1.2;">Application Received!</h2>
+              <p style="color: #4a5568; font-size: 16px; margin: 0; line-height: 1.5;">Hi ${firstName}, thank you for applying</p>
+            </div>
+            <div style="background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #667eea;">
+              <div style="color: #5a67d8; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">✅ Confirmation</div>
+              <p style="color: #2d3748; font-size: 15px; margin: 0; line-height: 1.6;">Thank you for your interest in joining our team at ${companyName}. We've successfully received your application and resume.</p>
+            </div>
+            <div style="background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%); border-radius: 12px; padding: 28px; margin-bottom: 24px;">
+              <h3 style="color: #744210; margin: 0 0 16px 0; font-size: 18px; font-weight: 700; text-align: center;">📅 What Happens Next?</h3>
+              <div style="color: #975a16; font-size: 14px; line-height: 2;">
+                <div style="background: #ffffff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center;">
+                  <span style="font-size: 20px; margin-right: 12px;">1️⃣</span>
+                  <span>Our HR team reviews your application</span>
+                </div>
+                <div style="background: #ffffff; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center;">
+                  <span style="font-size: 20px; margin-right: 12px;">2️⃣</span>
+                  <span>We'll contact you if your profile matches</span>
+                </div>
+              </div>
+            </div>
+            <div style="background: #f7fafc; border-radius: 12px; padding: 20px; text-align: center;">
+              <p style="color: #4a5568; font-size: 14px; margin: 0; line-height: 1.6;">💪 We appreciate your patience and wish you the best of luck!</p>
+            </div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%); padding: 28px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #718096; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">Best regards,</p>
+            <p style="color: #2d3748; margin: 0; font-size: 17px; font-weight: 700;">HR Team - ${companyName}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      const attachments = fileAttachment ? [fileAttachment] : [];
+      
+      // Send to HR with attachment
+      const hrResult = await this.sendEmail({
+        to: hrEmail,
+        cc: process.env.SMTP_CC,
+        subject: `New Career Application from ${firstName} ${lastName}`,
+        htmlBody: hrHtml,
+        attachments
+      });
+
+      // Send confirmation to applicant (no attachment)
+      const applicantResult = await this.sendEmail({
+        to: email,
+        subject: `Application Received - ${companyName}`,
+        htmlBody: applicantHtml
+      });
+      
+      console.log('HR notification sent:', hrResult.messageId);
+      console.log('Applicant confirmation sent:', applicantResult.messageId);
+      
+      return {
+        success: true,
+        hrMessageId: hrResult.messageId,
+        applicantMessageId: applicantResult.messageId
+      };
+    } catch (error) {
+      console.error('Failed to send career application emails:', error);
       throw new Error(`Email sending failed: ${error.message}`);
     }
   }
