@@ -20,6 +20,12 @@ class ProductService {
         { performanceFeature_en: { [Op.iLike]: `%${filter.search}%` } },
         { performanceFeature_id: { [Op.iLike]: `%${filter.search}%` } },
         { type: { [Op.iLike]: `%${filter.search}%` } },
+        { it_mfg: { [Op.iLike]: `%${filter.search}%` } },
+        { segment: { [Op.iLike]: `%${filter.search}%` } },
+        { sbu_name: { [Op.iLike]: `%${filter.search}%` } },
+        { grp_name: { [Op.iLike]: `%${filter.search}%` } },
+        { grp_sbu: { [Op.iLike]: `%${filter.search}%` } },
+        { coid: { [Op.iLike]: `%${filter.search}%` } },
       ];
     }
 

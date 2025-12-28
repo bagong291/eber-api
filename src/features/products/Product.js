@@ -15,7 +15,15 @@ Product.init({
   
   code:                 { type: DataTypes.STRING,    allowNull: false, unique: true },
   type:                 { type: DataTypes.STRING,    allowNull: false },
-  status:               { type: DataTypes.BOOLEAN,   allowNull: false, defaultValue: true }
+  status:               { type: DataTypes.BOOLEAN,   allowNull: false, defaultValue: true },
+  
+  // Additional product fields
+  it_mfg:               { type: DataTypes.STRING,    allowNull: true },
+  segment:              { type: DataTypes.STRING,    allowNull: true },
+  sbu_name:             { type: DataTypes.STRING,    allowNull: true },
+  grp_name:             { type: DataTypes.STRING,    allowNull: true },
+  grp_sbu:              { type: DataTypes.STRING,    allowNull: true },
+  coid:                 { type: DataTypes.STRING,    allowNull: true }
 }, {
   sequelize,
   modelName: 'Product',
