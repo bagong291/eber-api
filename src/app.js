@@ -36,6 +36,7 @@ app.use('/api/v1/articles', require('./features/articles/articleRoutes'));
 app.use('/api/v1/contacts', require('./features/contacts/contactRoutes'));
 app.use('/api/v1/careers',  require('./features/careers/careerRoutes'));
 app.use('/api/v1/products', require('./features/products/productRoutes'));
+app.use('/api/v1/top-products', require('./features/top-products/topProductRoutes'));
 app.use('/api/v1/certificates', require('./features/certificates/certificateRoutes'));
 app.use('/api/v1/auth',     require('./features/users/authRoutes'));
 app.use('/api/v1/users',    require('./features/users/userRoutes'));
