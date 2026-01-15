@@ -70,7 +70,7 @@ class EmailService {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@company.com';
     const companyName = process.env.COMPANY_NAME || 'Your Company';
     const websiteUrl = process.env.WEBSITE_URL || 'https://yourcompany.com';
-    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
+    const headerImageUrl = `${process.env.HEADER_URL}/uploads/header.png`;
     const productListUrl = `${websiteUrl}/products`;
 
     // Email to admin
@@ -450,7 +450,7 @@ class EmailService {
     
     const hrEmail = process.env.HR_EMAIL || 'hr@company.com';
     const companyName = process.env.COMPANY_NAME || 'Your Company';
-    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
+    const headerImageUrl = `${process.env.HEADER_URL}/uploads/header.png`;
     
     // Email to HR with attachment
     const hrHtml = `
@@ -587,7 +587,7 @@ class EmailService {
     const ccEmails = contactEmails.slice(1).join(',');
     
     const companyName = process.env.COMPANY_NAME || 'Your Company';
-    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
+    const headerImageUrl = `${process.env.HEADER_URL}/uploads/header.png`;
     
     // Email to contact team
     const contactHtml = `
@@ -664,7 +664,7 @@ class EmailService {
     const ccEmails = recipientEmails.slice(1).join(',');
     
     const companyName = process.env.COMPANY_NAME || 'Your Company';
-    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
+    const headerImageUrl = `${process.env.HEADER_URL}/uploads/header.png`;
     
     // Generate email HTML with dynamic badge and title
     const emailHtml = `
