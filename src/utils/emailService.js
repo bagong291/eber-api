@@ -576,6 +576,161 @@ class EmailService {
       throw new Error(`Email sending failed: ${error.message}`);
     }
   }
+
+  async sendContactFormEmail(formData) {
+    const { firstName, lastName, email, message } = formData;
+    
+    // Parse contact emails (support multiple comma-separated emails)
+    const contactEmailsStr = process.env.CONTACT_EMAIL_TO || 'contact@company.com';
+    const contactEmails = contactEmailsStr.split(',').map(e => e.trim()).filter(e => e);
+    const primaryContactEmail = contactEmails[0];
+    const ccEmails = contactEmails.slice(1).join(',');
+    
+    const companyName = process.env.COMPANY_NAME || 'Your Company';
+    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
+    
+    // Email to contact team
+    const contactHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
+          </div>
+          <div style="padding: 32px 24px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">💬 Contact Form</div>
+              <h2 style="color: #1a202c; font-size: 26px; margin: 0; font-weight: 700; line-height: 1.3;">New Message Received</h2>
+            </div>
+            <div style="background: linear-gradient(135deg, #f6f8fb 0%, #e9ecf5 100%); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+              <h3 style="color: #2d3748; margin: 0 0 16px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📋 Contact Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Name:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${firstName} ${lastName}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Email:</strong></td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none; font-size: 14px;">${email}</a></td></tr>
+              </table>
+            </div>
+            <div style="background: #fff; border: 2px solid #ffd56b; border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+              <h3 style="color: #744210; margin: 0 0 12px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">💬 Message</h3>
+              <div style="background: #fafafa; padding: 16px; border-radius: 8px; color: #4a5568; font-size: 14px; line-height: 1.6; white-space: pre-wrap; border-left: 3px solid #ffd56b;">${message}</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+              <h3 style="color: #5a67d8; margin: 0 0 12px 0; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🔗 Quick Actions</h3>
+              <a href="mailto:${email}?subject=Re: Your message to ${companyName}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 25px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">📧 Reply to ${firstName}</a>
+            </div>
+            <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px;">
+              <div style="color: #718096; font-size: 13px;">⏰ Received on ${new Date().toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      // Send to contact team (with CC if multiple emails)
+      const contactResult = await this.sendEmail({
+        to: primaryContactEmail,
+        cc: ccEmails || process.env.SMTP_CC,
+        subject: `Contact Request - ${firstName} ${lastName}`,
+        htmlBody: contactHtml
+      });
+      
+      console.log('Contact form notification sent to:', contactEmailsStr);
+      console.log('Message ID:', contactResult.messageId);
+      
+      return {
+        success: true,
+        messageId: contactResult.messageId,
+        recipients: contactEmails
+      };
+    } catch (error) {
+      console.error('Failed to send contact form email:', error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+  }
+
+  async sendUnifiedEmail(emailData) {
+    const { firstName, lastName, email, message, type, config } = emailData;
+    
+    // Parse recipient emails (support multiple comma-separated emails)
+    const recipientEmailsStr = process.env[config.envKey] || config.defaultEmail;
+    const recipientEmails = recipientEmailsStr.split(',').map(e => e.trim()).filter(e => e);
+    const primaryEmail = recipientEmails[0];
+    const ccEmails = recipientEmails.slice(1).join(',');
+    
+    const companyName = process.env.COMPANY_NAME || 'Your Company';
+    const headerImageUrl = `${process.env.BACKEND_URL}/uploads/header.png`;
+    
+    // Generate email HTML with dynamic badge and title
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; background: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);">
+          <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+            <img src="${headerImageUrl}" alt="${companyName}" style="max-width: 100%; height: auto; display: block;"/>
+          </div>
+          <div style="padding: 32px 24px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">${config.badge}</div>
+              <h2 style="color: #1a202c; font-size: 26px; margin: 0; font-weight: 700; line-height: 1.3;">${config.title}</h2>
+            </div>
+            <div style="background: linear-gradient(135deg, #f6f8fb 0%, #e9ecf5 100%); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+              <h3 style="color: #2d3748; margin: 0 0 16px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📋 Contact Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Name:</strong></td><td style="padding: 8px 0; color: #1a202c; font-size: 14px;">${firstName} ${lastName}</td></tr>
+                <tr><td style="padding: 8px 0; color: #4a5568; font-size: 14px;"><strong>Email:</strong></td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #667eea; text-decoration: none; font-size: 14px;">${email}</a></td></tr>
+              </table>
+            </div>
+            <div style="background: #fff; border: 2px solid #ffd56b; border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+              <h3 style="color: #744210; margin: 0 0 12px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">💬 Message</h3>
+              <div style="background: #fafafa; padding: 16px; border-radius: 8px; color: #4a5568; font-size: 14px; line-height: 1.6; white-space: pre-wrap; border-left: 3px solid #ffd56b;">${message}</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+              <h3 style="color: #5a67d8; margin: 0 0 12px 0; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🔗 Quick Actions</h3>
+              <a href="mailto:${email}?subject=Re: Your message to ${companyName}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 25px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">📧 Reply to ${firstName}</a>
+            </div>
+            <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px;">
+              <div style="color: #718096; font-size: 13px;">⏰ Received on ${new Date().toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      // Send email to recipients
+      const result = await this.sendEmail({
+        to: primaryEmail,
+        cc: ccEmails || process.env.SMTP_CC,
+        subject: config.subject(firstName, lastName),
+        htmlBody: emailHtml
+      });
+      
+      console.log(`${type} email sent to:`, recipientEmailsStr);
+      console.log('Message ID:', result.messageId);
+      
+      return {
+        success: true,
+        messageId: result.messageId,
+        recipients: recipientEmails,
+        type
+      };
+    } catch (error) {
+      console.error(`Failed to send ${type} email:`, error);
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new EmailService();
