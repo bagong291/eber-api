@@ -18,7 +18,7 @@ class CompanyTopProductRepository {
         include: [{
           model: ProductModel,
           as: 'product',
-          attributes: ['id', 'code', 'application_en', 'application_id', 'type', 'status']
+          attributes: ['id', 'code', 'segment', 'application_en', 'application_id', 'type', 'status']
         }],
         order: [['rank', 'ASC']]
       });
