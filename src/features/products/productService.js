@@ -63,12 +63,52 @@ class ProductService {
       where.status = filter.status === true ? true : false;
     }
 
+    // ✅ Filter by segment with support for array (IN)
+    if (filter.segment) {
+      if (Array.isArray(filter.segment)) {
+        where.segment = { [Op.in]: filter.segment };
+      } else {
+        where.segment = { [Op.iLike]: `%${filter.segment}%` };
+      }
+    }
+
+    // ✅ Filter by grp_sbu with support for array (IN)
+    if (filter.grp_sbu) {
+      if (Array.isArray(filter.grp_sbu)) {
+        where.grp_sbu = { [Op.in]: filter.grp_sbu };
+      } else {
+        where.grp_sbu = { [Op.iLike]: `%${filter.grp_sbu}%` };
+      }
+    }
+
+    // ✅ Filter by sbu_name with support for array (IN)
+    if (filter.sbu_name) {
+      if (Array.isArray(filter.sbu_name)) {
+        where.sbu_name = { [Op.in]: filter.sbu_name };
+      } else {
+        where.sbu_name = { [Op.iLike]: `%${filter.sbu_name}%` };
+      }
+    }
+
+    // ✅ Filter by grp_name with support for array (IN)
+    if (filter.grp_name) {
+      if (Array.isArray(filter.grp_name)) {
+        where.grp_name = { [Op.in]: filter.grp_name };
+      } else {
+        where.grp_name = { [Op.iLike]: `%${filter.grp_name}%` };
+      }
+    }
+
     const limit = Math.min(pageSize, 100);
     const offset = (page - 1) * limit;
 
     // Ambil daftar unique application & type
     const applications = await this.productRepository.findDistinctApplication();
     const types = await this.productRepository.findDistinctType();
+    const segments = await this.productRepository.findDistinctSegment();
+    const grpSbus = await this.productRepository.findDistinctGrpSbu();
+    const sbuNames = await this.productRepository.findDistinctSbuName();
+    const grpNames = await this.productRepository.findDistinctGrpName();
 
     const [data, total] = await Promise.all([
       this.productRepository.findAll({ where, limit, offset }),
@@ -77,7 +117,7 @@ class ProductService {
 
     return {
       data,
-      filter_feature:{types,applications},
+      filter_feature:{types,applications,segments,grpSbus,sbuNames,grpNames},
       meta:{page,total,pageSize: limit}
     };
   }

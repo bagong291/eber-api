@@ -20,6 +20,26 @@ exports.listProducts = async (req, res, next) => {
           req.query.type.split(',').map(s => s.trim()).filter(Boolean) : 
           (Array.isArray(req.query.type) ? req.query.type : [req.query.type])
         ) : undefined,
+      segment: req.query.segment ? 
+        (typeof req.query.segment === 'string' ? 
+          req.query.segment.split(',').map(s => s.trim()).filter(Boolean) : 
+          (Array.isArray(req.query.segment) ? req.query.segment : [req.query.segment])
+        ) : undefined,
+      grp_sbu: req.query.grp_sbu ? 
+        (typeof req.query.grp_sbu === 'string' ? 
+          req.query.grp_sbu.split(',').map(s => s.trim()).filter(Boolean) : 
+          (Array.isArray(req.query.grp_sbu) ? req.query.grp_sbu : [req.query.grp_sbu])
+        ) : undefined,
+      sbu_name: req.query.sbu_name ? 
+        (typeof req.query.sbu_name === 'string' ? 
+          req.query.sbu_name.split(',').map(s => s.trim()).filter(Boolean) : 
+          (Array.isArray(req.query.sbu_name) ? req.query.sbu_name : [req.query.sbu_name])
+        ) : undefined,
+      grp_name: req.query.grp_name ? 
+        (typeof req.query.grp_name === 'string' ? 
+          req.query.grp_name.split(',').map(s => s.trim()).filter(Boolean) : 
+          (Array.isArray(req.query.grp_name) ? req.query.grp_name : [req.query.grp_name])
+        ) : undefined,
       status: req.query.status
     }
     // Only show active products if not authenticated

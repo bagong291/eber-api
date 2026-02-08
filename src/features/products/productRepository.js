@@ -55,6 +55,46 @@ class ProductRepository {
     return [...new Set(allApps.filter(app => app && app.trim()))];
   }
 
+  async findDistinctSegment() {
+    const result = await ProductModel.findAll({
+      attributes: [[fn('DISTINCT', col('segment')), 'segment']],
+      where: { segment: { [Op.ne]: null } },
+      raw: true,
+    });
+
+    return result.map(item => item.segment).filter(seg => seg && seg.trim());
+  }
+
+  async findDistinctGrpSbu() {
+    const result = await ProductModel.findAll({
+      attributes: [[fn('DISTINCT', col('grp_sbu')), 'grp_sbu']],
+      where: { grp_sbu: { [Op.ne]: null } },
+      raw: true,
+    });
+
+    return result.map(item => item.grp_sbu).filter(grp => grp && grp.trim());
+  }
+
+  async findDistinctSbuName() {
+    const result = await ProductModel.findAll({
+      attributes: [[fn('DISTINCT', col('sbu_name')), 'sbu_name']],
+      where: { sbu_name: { [Op.ne]: null } },
+      raw: true,
+    });
+
+    return result.map(item => item.sbu_name).filter(sbu => sbu && sbu.trim());
+  }
+
+  async findDistinctGrpName() {
+    const result = await ProductModel.findAll({
+      attributes: [[fn('DISTINCT', col('grp_name')), 'grp_name']],
+      where: { grp_name: { [Op.ne]: null } },
+      raw: true,
+    });
+
+    return result.map(item => item.grp_name).filter(grp => grp && grp.trim());
+  }
+
   async createProduct(data) {
     return ProductModel.create(data);
   }
