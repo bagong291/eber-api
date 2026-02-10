@@ -196,7 +196,7 @@ class EmailService {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@company.com';
     const companyName = process.env.COMPANY_NAME || 'Your Company';
     const websiteUrl = process.env.WEBSITE_URL || 'https://yourcompany.com';
-    const headerImageUrl =`${process.env.BACKEND_URL}/uploads/header.png`;
+    const headerImageUrl =`${process.env.HEADER_URL}/uploads/header.png`;
     
     const userData = {
       name: fullName,
@@ -312,7 +312,7 @@ class EmailService {
     const companyName = process.env.COMPANY_NAME || 'Your Company';
     const websiteUrl = process.env.WEBSITE_URL || 'https://yourcompany.com';
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@company.com';
-    const headerImageUrl =`${process.env.BACKEND_URL}/uploads/header.png`;
+    const headerImageUrl =`${process.env.HEADER_URL}/uploads/header.png`;
     
     const formattedProductCode = productCode.replace('_', ' ');
     
