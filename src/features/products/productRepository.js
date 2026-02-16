@@ -110,6 +110,13 @@ class ProductRepository {
     if (!product) return null;
     return product.destroy();
   }
+
+  async deleteAll() {
+    return ProductModel.destroy({
+      where: {},
+      truncate: false
+    });
+  }
 }
 
 module.exports = ProductRepository;

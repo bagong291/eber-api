@@ -19,5 +19,7 @@ router.get('/:id', authenticateOptional, productController.getProductById);
 router.post('/', authenticate, productController.createProduct);
 router.put('/:id', authenticate, productController.updateProduct);
 router.delete('/:id', authenticate, productController.deleteProduct);
+router.post('/bulk-upload', authenticate, productController.bulkUploadProducts);
+router.delete('/', authenticate, productController.deleteAllProducts);
 
 module.exports = router;

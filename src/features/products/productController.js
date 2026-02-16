@@ -96,3 +96,87 @@ exports.deleteProduct = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.bulkUploadProducts = async (req, res, next) => {
+  try {
+    const { products } = req.body;
+    
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Products array is required and must not be empty' 
+      });
+    }
+
+    const results = {
+      created: 0,
+      errors: []
+    };
+
+    // Process products sequentially to handle duplicates gracefully
+    for (let i = 0; i < products.length; i++) {
+      const product = products[i];
+      
+      try {
+        // Validate required fields
+        if (!product.code) {
+          results.errors.push({ row: i + 1, message: 'Product code is required' });
+          continue;
+        }
+
+        // Check if product already exists
+        const existingProduct = await pr.findByCode(product.code);
+        
+        if (existingProduct) {
+          // Update existing product
+          await pr.updateProduct(existingProduct.id, {
+            ...product,
+            status: product.status !== undefined ? product.status : true
+          });
+        } else {
+          // Create new product
+          await pr.createProduct({
+            ...product,
+            status: product.status !== undefined ? product.status : true,
+            application_en: product.application_en || '',
+            application_id: product.application_id || '',
+            performanceFeature_en: product.performanceFeature_en || '',
+            performanceFeature_id: product.performanceFeature_id || ''
+          });
+          results.created++;
+        }
+      } catch (error) {
+        results.errors.push({ 
+          row: i + 1, 
+          message: error.message || 'Unknown error occurred' 
+        });
+      }
+    }
+
+    res.json({
+      status: 'success',
+      data: results,
+      message: `Bulk upload completed. ${results.created} products created/updated. ${results.errors.length} errors.`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteAllProducts = async (req, res, next) => {
+  try {
+    // Get count before deletion
+    const count = await pr.count();
+    
+    // Delete all products
+    await pr.deleteAll();
+    
+    res.json({
+      status: 'success',
+      data: { deleted: count },
+      message: `Successfully deleted ${count} products`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
